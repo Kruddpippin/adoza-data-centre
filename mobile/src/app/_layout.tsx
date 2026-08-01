@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { Spinner } from "@/components/ui";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,7 +17,7 @@ const queryClient = new QueryClient({
 function RootNavigator() {
   const { session, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <Spinner />;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

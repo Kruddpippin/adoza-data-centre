@@ -11,18 +11,15 @@ if (!url || !key) {
   console.error("Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY — check environment configuration.");
 }
 
-export const supabase = createClient(
-  url || "https://missing-config.supabase.co",
-  key || "missing-config",
-  {
-    auth: {
-      // AsyncStorage touches `window` during init, which doesn't exist during Expo
-      // Router's web SSR pre-render pass (Node context). On web, let supabase-js fall
-      // back to its own browser-safe storage (localStorage) instead.
-      storage: Platform.OS === "web" ? undefined : AsyncStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
-    },
-  }
-);
+// AsyncStorage touches `window` during init, which doesn't exist during Expo
+// Router's web SSR pre-render pass (Node context). On web, omit the `storage`
+// key entirely (rather than setting it to undefined) so supabase-js's own
+// default assignment logic picks its browser-safe localStorage-backed store.
+const authOptions =
+  Platform.OS === "web"
+    ? { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false }
+    : { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false };
+
+export const supabase = createClient(url || "https://missing-config.supabase.co", key || "missing-config", {
+  auth: authOptions,
+});
