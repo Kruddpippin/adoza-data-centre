@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Map, Award, Package, Banknote, ClipboardList,
-  UserCog, Shield, Menu, X, LogOut, Bell, Landmark,
+  UserCog, Shield, Menu, X, LogOut, Bell,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications, useMarkNotificationsRead } from "@/hooks/useData";
@@ -107,9 +107,7 @@ export function Layout() {
       >
         <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              <Landmark className="h-4 w-4" />
-            </div>
+            <img src="/kogi-logo.png" alt="Kogi State Government" className="h-8 w-8 shrink-0 rounded-full object-cover" />
             <div className="min-w-0 leading-tight">
               <p className="font-display truncate text-sm font-bold tracking-tight">ADOZA</p>
               <p className="truncate text-[10px] text-muted-foreground">Data Centre</p>

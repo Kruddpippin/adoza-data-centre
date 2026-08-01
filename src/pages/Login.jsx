@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
-import { Landmark, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Input, Field, Card } from "@/components/ui";
 
@@ -47,9 +47,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
       <div className="w-full max-w-sm animate-fade-up">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-            <Landmark className="h-7 w-7" />
-          </div>
+          <img src="/kogi-logo.png" alt="Kogi State Government" className="h-14 w-14 rounded-full object-cover shadow-lg" />
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">ADOZA Data Centre</h1>
             <p className="mt-1 text-sm text-muted-foreground">
