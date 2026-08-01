@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  Users, BadgeCheck, Award, Banknote, Package, Clock, ArrowRight,
+  Users, BadgeCheck, Award, Banknote, Package, Clock, ArrowRight, Smartphone,
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -14,6 +14,36 @@ import { formatNaira, VERIFICATION_META, EMPLOYMENT_LABELS } from "@/lib/utils";
 
 const PIE_COLORS = ["#f59e0b", "#059669", "#ef4444", "#f97316"];
 const EMP_COLORS = ["#0f766e", "#dc2626", "#2563eb", "#9333ea"];
+
+const ANDROID_APP_URL = import.meta.env.VITE_ANDROID_APP_URL;
+const IOS_APP_URL = import.meta.env.VITE_IOS_APP_URL;
+
+function MobileAppCard() {
+  if (!ANDROID_APP_URL && !IOS_APP_URL) return null;
+  return (
+    <Card className="animate-fade-up flex flex-wrap items-center justify-between gap-3 border-primary/20 bg-primary/[0.03] p-4">
+      <div className="flex items-center gap-2.5">
+        <Smartphone className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+        <div>
+          <p className="text-sm font-semibold">Get the ADOZA mobile app</p>
+          <p className="text-xs text-muted-foreground">Register and verify youths on the go — same data, same account.</p>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        {ANDROID_APP_URL && (
+          <a href={ANDROID_APP_URL} target="_blank" rel="noreferrer">
+            <Button variant="outline" size="sm">Download for Android</Button>
+          </a>
+        )}
+        {IOS_APP_URL && (
+          <a href={IOS_APP_URL} target="_blank" rel="noreferrer">
+            <Button variant="outline" size="sm">Download for iOS</Button>
+          </a>
+        )}
+      </div>
+    </Card>
+  );
+}
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -62,6 +92,8 @@ export default function Dashboard() {
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">Programme snapshot across Kogi State.</p>
       </div>
+
+      <MobileAppCard />
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6 lg:gap-4">

@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "ADOZA Data Centre",
+    "slug": "adoza-data-centre-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "adozadatacentre",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "ng.gov.kogi.adoza.datacentre",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ADOZA uses your location to record where a youth is registered during door-to-door visits."
+      }
+    },
+    "android": {
+      "package": "ng.gov.kogi.adoza.datacentre",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f3d24",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/kogi-logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ADOZA uses your location to record where a youth is registered during door-to-door visits."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0f3d24",
+          "image": "./assets/images/kogi-logo.png",
+          "imageWidth": 120
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
