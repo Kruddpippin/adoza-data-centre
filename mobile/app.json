@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ADOZA Data Centre",
-    "slug": "adoza-data-centre-mobile",
+    "slug": "adoza-data-center-qtgth8",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -52,6 +52,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "63d897ab-f1e5-4139-aa16-c71f936e0d90"
+      }
+    },
+    "owner": "kruddpippins-inc"
   }
 }
