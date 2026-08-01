@@ -107,7 +107,14 @@ export function Layout() {
       >
         <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4">
           <div className="flex min-w-0 items-center gap-2.5">
-            <img src="/kogi-logo.png" alt="Kogi State Government" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+            <img
+              src="/kogi-logo.png"
+              alt="Kogi State Government"
+              width={32}
+              height={32}
+              decoding="async"
+              className="h-8 w-8 shrink-0 rounded-full object-cover"
+            />
             <div className="min-w-0 leading-tight">
               <p className="font-display truncate text-sm font-bold tracking-tight">ADOZA</p>
               <p className="truncate text-[10px] text-muted-foreground">Data Centre</p>

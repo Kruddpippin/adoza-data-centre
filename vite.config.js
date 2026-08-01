@@ -2,13 +2,20 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     alias: { "@": path.resolve(__dirname, "src") },
   },
+  esbuild: {
+    drop: mode === "production" ? ["console", "debugger"] : [],
+  },
   build: {
     target: "es2020",
+    modulePreload: {
+      resolveDependencies: (_filename, deps) =>
+        deps.filter((dep) => !dep.includes("/charts-") && !dep.includes("/map-")),
+    },
     rollupOptions: {
       output: {
         manualChunks: {
@@ -20,4 +27,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

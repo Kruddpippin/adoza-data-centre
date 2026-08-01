@@ -47,7 +47,15 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
       <div className="w-full max-w-sm animate-fade-up">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <img src="/kogi-logo.png" alt="Kogi State Government" className="h-14 w-14 rounded-full object-cover shadow-lg" />
+          <img
+            src="/kogi-logo.png"
+            alt="Kogi State Government"
+            width={56}
+            height={56}
+            fetchpriority="high"
+            decoding="async"
+            className="h-14 w-14 rounded-full object-cover shadow-lg"
+          />
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">ADOZA Data Centre</h1>
             <p className="mt-1 text-sm text-muted-foreground">
