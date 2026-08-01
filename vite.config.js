@@ -13,13 +13,12 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "es2020",
     modulePreload: {
-      resolveDependencies: (_filename, deps) =>
-        deps.filter((dep) => !dep.includes("/charts-") && !dep.includes("/map-")),
+      resolveDependencies: (_filename, deps) => deps.filter((dep) => !dep.includes("/map-")),
     },
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
+          vendor: ["react", "react-dom", "react-router-dom", "clsx"],
           charts: ["recharts"],
           map: ["leaflet", "react-leaflet"],
           supabase: ["@supabase/supabase-js", "@tanstack/react-query"],
