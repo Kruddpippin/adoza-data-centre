@@ -408,7 +408,7 @@ export function YouthForm({ youthId }: { youthId?: string }) {
           </View>
           <View className="flex-1">
             <Text className="text-sm text-foreground">
-              The youth has given informed consent for their data to be collected and used for the ADOZA empowerment programme.
+              The candidate has given informed consent for their data to be collected and used for the ADOZA empowerment programme.
             </Text>
             {errors.consent_given ? <Text className="mt-1 text-[11px] font-medium text-destructive">{errors.consent_given}</Text> : null}
           </View>
@@ -422,7 +422,7 @@ export function YouthForm({ youthId }: { youthId?: string }) {
           Cancel
         </Button>
         <Button loading={save.isPending} onPress={submit}>
-          {youthId ? "Save changes" : "Register youth"}
+          {youthId ? "Save changes" : "Register candidate"}
         </Button>
       </View>
     </ScrollView>

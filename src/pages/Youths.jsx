@@ -17,7 +17,7 @@ export default function Youths() {
 
   const handleExport = () =>
     exportCsv(
-      "adoza-youths.csv",
+      "adoza-candidates.csv",
       (youths ?? []).map((y) => ({
         first_name: y.first_name,
         last_name: y.last_name,
@@ -38,7 +38,7 @@ export default function Youths() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 animate-fade-up">
         <div>
-          <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">Youths</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">Candidates</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">Door-to-door registrations across all wards.</p>
         </div>
         <div className="flex gap-2">
@@ -48,7 +48,7 @@ export default function Youths() {
           {canRegister && (
             <Link to="/youths/new">
               <Button size="sm">
-                <Plus className="h-4 w-4" /> Register youth
+                <Plus className="h-4 w-4" /> Register candidate
               </Button>
             </Link>
           )}
@@ -64,7 +64,7 @@ export default function Youths() {
             placeholder="Search name or phone…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            aria-label="Search youths"
+            aria-label="Search candidates"
           />
         </div>
         <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-40" aria-label="Filter by status">
@@ -86,7 +86,7 @@ export default function Youths() {
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : !youths?.length ? (
-        <EmptyState icon={Users} title="No youths found" message="Adjust your filters, or register the first youth." />
+        <EmptyState icon={Users} title="No candidates found" message="Adjust your filters, or register the first candidate." />
       ) : (
         <Table className="animate-fade-up">
           <thead>

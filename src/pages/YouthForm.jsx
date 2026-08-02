@@ -128,7 +128,7 @@ export default function YouthForm() {
           <ArrowLeft className="h-3.5 w-3.5" /> Back
         </Link>
         <h1 className="font-display mt-1 text-xl font-bold tracking-tight lg:text-2xl">
-          {id ? "Edit youth record" : "Register a youth"}
+          {id ? "Edit candidate record" : "Register a candidate"}
         </h1>
       </div>
 
@@ -289,7 +289,7 @@ export default function YouthForm() {
             <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
               <input type="checkbox" checked={form.consent_given} onChange={set("consent_given")} className="mt-0.5 h-4 w-4 accent-[hsl(152,65%,22%)]" />
               <span>
-                The youth has given informed consent for their data to be collected and used for the ADOZA empowerment programme.
+                The candidate has given informed consent for their data to be collected and used for the ADOZA empowerment programme.
                 {errors.consent_given && <span className="block text-[11px] font-medium text-destructive">{errors.consent_given}</span>}
               </span>
             </label>
@@ -303,7 +303,7 @@ export default function YouthForm() {
             <Button type="button" variant="outline">Cancel</Button>
           </Link>
           <Button type="submit" loading={save.isPending}>
-            <Save className="h-4 w-4" /> {id ? "Save changes" : "Register youth"}
+            <Save className="h-4 w-4" /> {id ? "Save changes" : "Register candidate"}
           </Button>
         </div>
       </form>

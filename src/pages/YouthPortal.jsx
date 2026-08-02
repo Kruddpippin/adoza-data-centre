@@ -82,7 +82,7 @@ function PortalHeader({ youth }) {
           <p className="font-display text-sm font-bold tracking-tight">
             {youth ? `${youth.first_name} ${youth.last_name}` : "ADOZA Data Centre"}
           </p>
-          <p className="text-[11px] text-muted-foreground">Youth self-service portal</p>
+          <p className="text-[11px] text-muted-foreground">Candidate self-service portal</p>
         </div>
       </div>
       <Button variant="outline" size="sm" onClick={signOut}>

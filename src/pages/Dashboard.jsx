@@ -65,7 +65,7 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6 lg:gap-4">
-        <StatCard className="animate-fade-up stagger-1" icon={Users} label="Registered youths" value={stats.total} tone="primary" />
+        <StatCard className="animate-fade-up stagger-1" icon={Users} label="Registered candidates" value={stats.total} tone="primary" />
         <StatCard className="animate-fade-up stagger-2" icon={BadgeCheck} label="Verified" value={stats.verified} tone="emerald" />
         <StatCard className="animate-fade-up stagger-3" icon={Clock} label="Pending review" value={stats.pending} tone="amber" />
         <StatCard className="animate-fade-up stagger-4" icon={Award} label="Beneficiaries" value={stats.beneficiaries} tone="accent" />
@@ -86,7 +86,7 @@ export default function Dashboard() {
                 <XAxis dataKey="lga" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval={0} angle={-20} textAnchor="end" height={48} />
                 <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip cursor={{ fill: "hsl(150 12% 96%)" }} contentStyle={{ borderRadius: 10, fontSize: 12 }} />
-                <Bar dataKey="count" name="Youths" fill="hsl(152 65% 28%)" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="count" name="Candidates" fill="hsl(152 65% 28%)" radius={[6, 6, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

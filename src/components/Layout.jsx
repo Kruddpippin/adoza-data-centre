@@ -15,7 +15,7 @@ const IOS_APP_URL = import.meta.env.VITE_IOS_APP_URL;
 
 const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
-  { path: "/youths", label: "Youths", icon: Users, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
+  { path: "/youths", label: "Candidates", icon: Users, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
   { path: "/map", label: "Field Map", icon: Map, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
   { path: "/beneficiaries", label: "Beneficiaries", icon: Award, roles: ["super_admin", "campaign_admin", "validator", "committee"] },
   { path: "/equipment", label: "Equipment", icon: Package, roles: ["super_admin", "campaign_admin", "committee"] },
@@ -204,7 +204,7 @@ export function Layout() {
           </button>
           <p className="font-display text-sm font-bold lg:hidden">ADOZA Data Centre</p>
           <p className="hidden text-xs text-muted-foreground lg:block">
-            SYB Door-to-Door Youth Empowerment Programme — Kogi State
+            SYB Door-to-Door Candidate Empowerment Programme — Kogi State
           </p>
 
           <div className="ml-auto flex items-center gap-1">

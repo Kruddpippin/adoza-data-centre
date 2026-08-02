@@ -44,7 +44,7 @@ export default function FieldMap() {
       </div>
 
       {!points.length ? (
-        <EmptyState icon={MapIcon} title="No GPS data yet" message="Youth registrations with captured coordinates will appear here." />
+        <EmptyState icon={MapIcon} title="No GPS data yet" message="Candidate registrations with captured coordinates will appear here." />
       ) : (
         <Card className="animate-fade-up overflow-hidden p-0">
           <MapContainer

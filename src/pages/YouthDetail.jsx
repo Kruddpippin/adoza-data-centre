@@ -65,7 +65,7 @@ export default function YouthDetail() {
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="animate-fade-up">
         <Link to="/youths" className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-3.5 w-3.5" /> All youths
+          <ArrowLeft className="h-3.5 w-3.5" /> All candidates
         </Link>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">

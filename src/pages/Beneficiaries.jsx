@@ -27,7 +27,7 @@ export default function Beneficiaries() {
       <div className="flex flex-wrap items-center justify-between gap-3 animate-fade-up">
         <div>
           <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">Beneficiaries</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Youths approved by the empowerment committee.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Candidates approved by the empowerment committee.</p>
         </div>
         <Button variant="outline" size="sm" onClick={handleExport} disabled={!youths?.length}>
           <Download className="h-4 w-4" /> Export CSV
@@ -39,7 +39,7 @@ export default function Beneficiaries() {
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : !youths?.length ? (
-        <EmptyState icon={Award} title="No beneficiaries yet" message="Verified youths can be approved from their profile page." />
+        <EmptyState icon={Award} title="No beneficiaries yet" message="Verified candidates can be approved from their profile page." />
       ) : (
         <Table className="animate-fade-up">
           <thead>

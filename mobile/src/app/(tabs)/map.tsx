@@ -105,7 +105,7 @@ export default function FieldMap() {
       </View>
 
       {!points.length ? (
-        <EmptyState title="No GPS data yet" message="Youth registrations with captured coordinates will appear here." />
+        <EmptyState title="No GPS data yet" message="Candidate registrations with captured coordinates will appear here." />
       ) : (
         <WebView
           ref={webviewRef}

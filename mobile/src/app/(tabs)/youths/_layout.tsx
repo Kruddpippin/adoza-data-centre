@@ -14,10 +14,10 @@ export default function YouthsLayout() {
         headerTitleStyle: { color: "#101a16" },
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Youths", headerRight: () => <AccountMenuButton /> }} />
-      <Stack.Screen name="new" options={{ title: "Register Youth", presentation: "modal" }} />
-      <Stack.Screen name="[id]/index" options={{ title: "Youth Detail" }} />
-      <Stack.Screen name="[id]/edit" options={{ title: "Edit Youth", presentation: "modal" }} />
+      <Stack.Screen name="index" options={{ title: "Candidates", headerRight: () => <AccountMenuButton /> }} />
+      <Stack.Screen name="new" options={{ title: "Register Candidate", presentation: "modal" }} />
+      <Stack.Screen name="[id]/index" options={{ title: "Candidate Detail" }} />
+      <Stack.Screen name="[id]/edit" options={{ title: "Edit Candidate", presentation: "modal" }} />
     </Stack>
   );
 }

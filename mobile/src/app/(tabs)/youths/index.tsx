@@ -66,7 +66,7 @@ export default function YouthsList() {
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : !youths?.length ? (
-        <EmptyState title="No youths found" message="Adjust your filters, or register the first youth." />
+        <EmptyState title="No candidates found" message="Adjust your filters, or register the first candidate." />
       ) : (
         <FlatList
           data={youths}

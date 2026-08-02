@@ -145,7 +145,7 @@ export default function Surveys() {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={`Submit — ${selected?.name ?? ""}`} wide>
         <form onSubmit={submit} className="space-y-4" noValidate>
-          <Field label="Linked youth (optional)">
+          <Field label="Linked candidate (optional)">
             <Select value={youthId} onChange={(e) => setYouthId(e.target.value)}>
               <option value="">— None —</option>
               {youths.map((y) => <option key={y.id} value={y.id}>{y.first_name} {y.last_name}</option>)}

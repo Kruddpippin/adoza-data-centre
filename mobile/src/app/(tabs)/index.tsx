@@ -86,7 +86,7 @@ export default function Dashboard() {
       </View>
 
       <View className="flex-row flex-wrap gap-3">
-        <StatTile label="Registered youths" value={stats.total} />
+        <StatTile label="Registered candidates" value={stats.total} />
         <StatTile label="Verified" value={stats.verified} />
         <StatTile label="Pending review" value={stats.pending} />
         <StatTile label="Beneficiaries" value={stats.beneficiaries} />

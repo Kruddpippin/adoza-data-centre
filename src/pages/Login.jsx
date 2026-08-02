@@ -346,7 +346,7 @@ export default function Login() {
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">ADOZA Data Centre</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              SYB Door-to-Door Youth Empowerment — Kogi State
+              SYB Door-to-Door Candidate Empowerment — Kogi State
             </p>
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function Login() {
               mode === "youth" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Youth sign in / register
+            Candidate sign in / register
           </button>
         </div>
 
@@ -492,7 +492,7 @@ export default function Login() {
         </Card>
 
         <p className="mt-4 text-center text-[11px] text-muted-foreground">
-          {mode === "staff" ? "Authorised programme staff only. Activity is audited." : "For youths registering with the ADOZA empowerment programme."}
+          {mode === "staff" ? "Authorised programme staff only. Activity is audited." : "For candidates registering with the ADOZA empowerment programme."}
         </p>
       </div>
     </div>

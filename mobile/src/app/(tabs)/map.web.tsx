@@ -11,7 +11,7 @@ export default function FieldMapWebFallback() {
       <Ionicons name="phone-portrait-outline" size={32} color="#6b7a75" />
       <Text className="text-center text-sm font-semibold text-foreground">Field Map isn't available on web</Text>
       <Text className="max-w-xs text-center text-xs text-muted-foreground">
-        Open this app in Expo Go on an iOS or Android device to view GPS-plotted youth registrations on the map.
+        Open this app in Expo Go on an iOS or Android device to view GPS-plotted candidate registrations on the map.
       </Text>
     </SafeAreaView>
   );

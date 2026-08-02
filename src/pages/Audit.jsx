@@ -10,7 +10,7 @@ const ACTION_META = {
   delete: { label: "Deleted", cls: "bg-red-100 text-red-700" },
 };
 
-const ENTITY_LABELS = { youths: "Youth", equipment: "Equipment", funding: "Funding" };
+const ENTITY_LABELS = { youths: "Candidate", equipment: "Equipment", funding: "Funding" };
 
 export default function Audit() {
   const { data: rows, isLoading, isError, refetch } = useAuditLog();
@@ -29,7 +29,7 @@ export default function Audit() {
       <div className="flex flex-wrap items-center justify-between gap-3 animate-fade-up">
         <div>
           <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">Audit Log</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Every change to youths, equipment and funding is recorded automatically.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Every change to candidates, equipment and funding is recorded automatically.</p>
         </div>
         <Select value={entity} onChange={(e) => setEntity(e.target.value)} className="w-44" aria-label="Filter by entity">
           <option value="">All entities</option>
