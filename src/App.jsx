@@ -46,7 +46,7 @@ export default function App() {
           <Route
             path="/beneficiaries"
             element={
-              <ProtectedRoute roles={[...ADMIN_ROLES, "verifier", "committee"]}>
+              <ProtectedRoute roles={[...ADMIN_ROLES, "validator", "committee"]}>
                 <Beneficiaries />
               </ProtectedRoute>
             }

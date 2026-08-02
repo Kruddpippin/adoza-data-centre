@@ -14,13 +14,13 @@ const ANDROID_APP_URL = "/downloads/adoza-data-centre.apk";
 const IOS_APP_URL = import.meta.env.VITE_IOS_APP_URL;
 
 const NAV_ITEMS = [
-  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "campaign_admin", "enumerator", "verifier", "committee"] },
-  { path: "/youths", label: "Youths", icon: Users, roles: ["super_admin", "campaign_admin", "enumerator", "verifier", "committee"] },
-  { path: "/map", label: "Field Map", icon: Map, roles: ["super_admin", "campaign_admin", "enumerator", "verifier", "committee"] },
-  { path: "/beneficiaries", label: "Beneficiaries", icon: Award, roles: ["super_admin", "campaign_admin", "verifier", "committee"] },
+  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
+  { path: "/youths", label: "Youths", icon: Users, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
+  { path: "/map", label: "Field Map", icon: Map, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
+  { path: "/beneficiaries", label: "Beneficiaries", icon: Award, roles: ["super_admin", "campaign_admin", "validator", "committee"] },
   { path: "/equipment", label: "Equipment", icon: Package, roles: ["super_admin", "campaign_admin", "committee"] },
   { path: "/funding", label: "Funding", icon: Banknote, roles: ["super_admin", "campaign_admin", "committee"] },
-  { path: "/surveys", label: "Surveys", icon: ClipboardList, roles: ["super_admin", "campaign_admin", "enumerator", "verifier", "committee"] },
+  { path: "/surveys", label: "Surveys", icon: ClipboardList, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
   { path: "/users", label: "Team", icon: UserCog, roles: ADMIN_ROLES },
   { path: "/audit", label: "Audit Log", icon: Shield, roles: ADMIN_ROLES },
 ];

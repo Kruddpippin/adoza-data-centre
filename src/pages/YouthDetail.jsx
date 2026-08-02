@@ -33,7 +33,7 @@ export default function YouthDetail() {
   if (isLoading) return <Spinner />;
   if (isError || !youth) return <ErrorState onRetry={refetch} />;
 
-  const canVerify = isAdminRole(role) || role === "verifier";
+  const canVerify = isAdminRole(role) || role === "validator";
   const canApproveBeneficiary = isAdminRole(role) || role === "committee";
   const canEdit = isAdminRole(role) || (role === "enumerator" && youth.created_by === user?.id && youth.verification_status === "pending");
   const meta = VERIFICATION_META[youth.verification_status];
