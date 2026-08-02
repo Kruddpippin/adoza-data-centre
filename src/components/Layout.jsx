@@ -2,11 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Map, Award, Package, Banknote, ClipboardList,
-  UserCog, Shield, Menu, X, LogOut, Bell,
+  UserCog, Shield, Menu, X, LogOut, Bell, Smartphone,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications, useMarkNotificationsRead } from "@/hooks/useData";
 import { cn, ROLE_LABELS, ROLE_COLORS, initialsOf, formatDateTime, ADMIN_ROLES } from "@/lib/utils";
+
+// Self-hosted APK (public/downloads/) so the link never expires like EAS's own build-artifact URLs do.
+// Re-download and replace this file after each new `eas build` to keep it current.
+const ANDROID_APP_URL = "/downloads/adoza-data-centre.apk";
+const IOS_APP_URL = import.meta.env.VITE_IOS_APP_URL;
 
 const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "campaign_admin", "enumerator", "verifier", "committee"] },
@@ -163,6 +168,31 @@ export function Layout() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="shrink-0 border-t p-2">
+          <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Get the mobile app
+          </p>
+          <a
+            href={ANDROID_APP_URL}
+            download
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+          >
+            <Smartphone className="h-4 w-4 shrink-0" />
+            Download for Android
+          </a>
+          {IOS_APP_URL && (
+            <a
+              href={IOS_APP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+            >
+              <Smartphone className="h-4 w-4 shrink-0" />
+              Download for iOS
+            </a>
+          )}
         </div>
       </aside>
 
