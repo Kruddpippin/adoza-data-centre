@@ -25,7 +25,7 @@ function YouthSignIn() {
     setLoading(true);
     const { error: err } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/my-registration` },
+      options: { emailRedirectTo: `${window.location.origin}/login` },
     });
     setLoading(false);
     if (err) {
@@ -41,7 +41,7 @@ function YouthSignIn() {
         <CheckCircle2 className="h-8 w-8 text-primary" aria-hidden />
         <p className="text-sm font-medium">Check your email</p>
         <p className="text-xs text-muted-foreground">
-          We sent a sign-in link to <span className="font-medium">{email}</span>. Open it on this device to continue.
+          We sent a confirmation link to <span className="font-medium">{email}</span>. Open it on this device — it'll bring you right back here, signed in.
         </p>
       </div>
     );
