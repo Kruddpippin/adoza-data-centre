@@ -15,11 +15,12 @@ import { formatNaira, VERIFICATION_META, EMPLOYMENT_LABELS } from "@/lib/utils";
 const PIE_COLORS = ["#f59e0b", "#059669", "#ef4444", "#f97316"];
 const EMP_COLORS = ["#0f766e", "#dc2626", "#2563eb", "#9333ea"];
 
-const ANDROID_APP_URL = import.meta.env.VITE_ANDROID_APP_URL;
+// Self-hosted APK (public/downloads/) so the link never expires like EAS's own build-artifact URLs do.
+// Re-download and replace this file after each new `eas build` to keep it current.
+const ANDROID_APP_URL = "/downloads/adoza-data-centre.apk";
 const IOS_APP_URL = import.meta.env.VITE_IOS_APP_URL;
 
 function MobileAppCard() {
-  if (!ANDROID_APP_URL && !IOS_APP_URL) return null;
   return (
     <Card className="animate-fade-up flex flex-wrap items-center justify-between gap-3 border-primary/20 bg-primary/[0.03] p-4">
       <div className="flex items-center gap-2.5">
@@ -30,11 +31,9 @@ function MobileAppCard() {
         </div>
       </div>
       <div className="flex gap-2">
-        {ANDROID_APP_URL && (
-          <a href={ANDROID_APP_URL} target="_blank" rel="noreferrer">
-            <Button variant="outline" size="sm">Download for Android</Button>
-          </a>
-        )}
+        <a href={ANDROID_APP_URL} download>
+          <Button variant="outline" size="sm">Download for Android</Button>
+        </a>
         {IOS_APP_URL && (
           <a href={IOS_APP_URL} target="_blank" rel="noreferrer">
             <Button variant="outline" size="sm">Download for iOS</Button>
