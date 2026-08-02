@@ -44,6 +44,43 @@ export function useYouth(id) {
   });
 }
 
+/* Self-service: the caller's own (or claimable) youths row. RLS scopes this to either
+   auth_user_id = auth.uid(), or an unlinked row whose email matches the caller's — no
+   explicit filter needed here, the database enforces it. */
+export function useMyYouthRecord(userId) {
+  return useQuery({
+    queryKey: ["my-youth-record", userId],
+    enabled: !!userId,
+    queryFn: () =>
+      run(
+        supabase
+          .from("youths")
+          .select("*, youth_skills(id, years_of_experience, proficiency, is_primary, skill:skills(id, name, category))")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle()
+      ),
+  });
+}
+
+export function useClaimYouthRecord() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, userId }) =>
+      run(supabase.from("youths").update({ auth_user_id: userId }).eq("id", id).select().single()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-youth-record"] }),
+  });
+}
+
+export function useMyFunding(youthId) {
+  return useQuery({
+    queryKey: ["my-funding", youthId],
+    enabled: !!youthId,
+    queryFn: () =>
+      run(supabase.from("funding").select("*").eq("beneficiary_id", youthId).order("created_at", { ascending: false })),
+  });
+}
+
 export function useSaveYouth() {
   const qc = useQueryClient();
   return useMutation({

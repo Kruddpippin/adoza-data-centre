@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Save, Plus, Trash2 } from "lucide-react";
 import { useYouth, useSaveYouth, useSkills } from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner } from "@/components/ui";
-import { KOGI_LGAS, EDUCATION_LEVELS, EMPLOYMENT_LABELS } from "@/lib/utils";
+import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS } from "@/lib/utils";
 
 const EMPTY = {
   first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
@@ -52,6 +52,13 @@ export default function YouthForm() {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setForm((f) => ({ ...f, [key]: value }));
   };
+
+  const setLga = (e) => {
+    const lga = e.target.value;
+    setForm((f) => ({ ...f, lga, ward: (KOGI_WARDS_BY_LGA[lga] ?? []).includes(f.ward) ? f.ward : "" }));
+  };
+
+  const wardOptions = KOGI_WARDS_BY_LGA[form.lga] ?? [];
 
   const captureGps = () => {
     if (!navigator.geolocation) {
@@ -170,13 +177,16 @@ export default function YouthForm() {
                 <Textarea rows={2} value={form.address} onChange={set("address")} autoComplete="street-address" />
               </Field>
             </div>
-            <Field label="Ward" required error={errors.ward}>
-              <Input value={form.ward} onChange={set("ward")} placeholder="e.g. Lokoja A" />
-            </Field>
             <Field label="LGA" required error={errors.lga}>
-              <Select value={form.lga} onChange={set("lga")}>
+              <Select value={form.lga} onChange={setLga}>
                 <option value="">Select LGA…</option>
                 {KOGI_LGAS.map((l) => <option key={l} value={l}>{l}</option>)}
+              </Select>
+            </Field>
+            <Field label="Ward" required error={errors.ward}>
+              <Select value={form.ward} onChange={set("ward")} disabled={!form.lga}>
+                <option value="">{form.lga ? "Select ward…" : "Select LGA first…"}</option>
+                {wardOptions.map((w) => <option key={w} value={w}>{w}</option>)}
               </Select>
             </Field>
             <Field label="Latitude">

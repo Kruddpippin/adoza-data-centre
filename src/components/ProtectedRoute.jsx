@@ -9,6 +9,7 @@ export function ProtectedRoute({ children, roles }) {
 
   if (loading) return <Spinner className="min-h-screen" />;
   if (!session) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!role) return <Navigate to="/my-registration" replace />;
 
   if (roles && role && !roles.includes(role)) {
     return (

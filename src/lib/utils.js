@@ -84,6 +84,108 @@ export const KOGI_LGAS = [
   "Yagba East", "Yagba West",
 ];
 
+// Wards per LGA, source: INEC Directory of Polling Units (Revised January 2015).
+export const KOGI_WARDS_BY_LGA = {
+  "Adavi": [
+    "Okunchi/Ozuri/Onieka", "Ogaminana", "Iruvucheba", "Idanuhua", "Adavi-Eba",
+    "Kuroko I", "Kuroko II", "Ino Ziomi/Ipaku/Osisi", "Ikaraworo/Idobanyere",
+    "Nagazi Farm Centre", "Ege/Iruvochinomi",
+  ],
+  "Ajaokuta": [
+    "Ebiya North", "Ebiya South", "Abodi/Patesi", "Ichuwa/Upaja", "Badoko",
+    "Ogigiri", "Adogo", "Achagana", "Odonu/Unosi", "Omgbo",
+    "Adogu/Apamira/Ogodo Uhuovene", "Obangede/Ohunene/Ukoko Inye'Re",
+    "Old Ajaokuta", "Ganaga/Township",
+  ],
+  "Ankpa": [
+    "Ankpa Township", "Ankpa Suburb I", "Ankpa Suburb II", "Ankpa I", "Ankpa II",
+    "Enjema I", "Enjema II", "Enjema III", "Enjema IV",
+    "Ojoku I", "Ojoku II", "Ojoku III", "Ojoku IV",
+  ],
+  "Bassa": [
+    "Akuba I", "Akuba II", "Ayede/Akakana", "Ozongulo/Kpanche", "Ikende",
+    "Gboloko", "Kpata", "Eforo", "Mozum", "Ozugbe",
+  ],
+  "Dekina": [
+    "Dekina Town", "Iyale", "Emewe", "Odu I", "Odu II", "Abocho", "Ogbabede",
+    "Adumu Egume", "Ojikpadala", "Anyigba", "Okura Olafia", "Ogane Inigu",
+  ],
+  "Ibaji": [
+    "Odeke", "Ujeh", "Iyano", "Akpanyo", "Unale", "Ojila", "Ejule", "Ayah",
+    "Analo", "Onyedega",
+  ],
+  "Idah": [
+    "Igalaogba", "Owoli Apa", "Igecheba", "Ukwaja", "Ogegele", "Ede",
+    "Sabon Gari", "Ega", "Ugwoda", "Ichala",
+  ],
+  "Igalamela-Odolu": [
+    "Avrugo", "Ekwuloko", "Odolu", "Oji-Aji", "Akpanya", "Ubele", "Ajaka I",
+    "Ajaka II", "Oforachi I", "Oforachi II",
+  ],
+  "Ijumu": [
+    "Aiyegunle", "Aiyetoro I", "Aiyetoro II", "Iyah/Ayeh", "Odokoro",
+    "Aiyere/Arimah", "Ogidi", "Ileteju/Origa", "Ogale/Aduge",
+    "Egbeda Egga/Okedayo", "Iyara", "Iffe/Ikoyi/Okejumu", "Iyamoye",
+    "Ekinrin Ade", "Ibgolayere/Ilaere",
+  ],
+  "Kabba/Bunu": [
+    "Asuta", "Odo-Akete", "Okekoko", "Odolu", "Aiyewa", "Aiyeteju", "Otu",
+    "Egbeda", "Okedayo", "Akutupa-Kiri", "Aiyetoro-Kiri", "Iluke",
+    "Olle/Oke-Ofin", "Odo-Ape", "Okebukun",
+  ],
+  "Kogi": [
+    "Ukwo-Koton Karfe", "Odaki-Koton Karfe", "Kotonkarfe South East",
+    "Girinya", "Irenodu", "Akpasu", "Tawari", "Gegu-Beki North",
+    "Gegu-Beki South", "Chikara North", "Chikara South",
+  ],
+  "Lokoja": [
+    "Lokoja - A", "Lokoja - B", "Lokoja - C", "Lokoja - D", "Lokoja - E",
+    "Kupa North East", "Kupa South West", "Oworo", "Kakanda", "Eggan",
+  ],
+  "Mopa-Muro": [
+    "Odole - 1", "Odole - 2", "Illeteju - 1", "Illeteju - 2", "Okeagi/Ilai",
+    "Orokere", "Takete Idde/Otafun", "Aiyedayo/Aiyedaro", "Agbafogun",
+    "Aiyede/Okagi",
+  ],
+  "Ofu": [
+    "Igo", "Aloma", "Ejule Allah", "Itobe/Okokenyi", "Ugwolawo - 1",
+    "Ugwolawo - 2", "Aloji", "Ofoke", "Ochadamu", "Ogbonicha", "Iboko/Efakwu",
+  ],
+  "Ogori/Magongo": [
+    "Eni", "Oshobane", "Okibo", "Okesi", "Ileteju", "Aiyeromi", "Ugugu",
+    "Obinoyin", "Obatgben", "Oturu Opowuroye",
+  ],
+  "Okehi": [
+    "Obaiba I", "Obaiba II", "Okuehu", "Ohueta", "Oboroke Eba",
+    "Obaroke Uvete", "Eika / Ohizenyi", "Okaito / Usungwen",
+    "Ohuepe / Omavi Uboro", "Obangede / Uhuodo", "Oboroke Uvete - II",
+  ],
+  "Okene": [
+    "Bariki", "Obessa", "Onyukoko", "Idoji", "Orietesu", "Otutu",
+    "Okene-Eba / Agassa/ Ahache", "Obehira Uvetta", "Obehira Eba",
+    "Abuga/Ozuja", "Upogoro/Odenku",
+  ],
+  "Olamaboro": [
+    "Imane I", "Imane II", "Ogugu I", "Ogugu II", "Ogugu III",
+    "Olamaboro I", "Olamaboro II", "Olamaboro III", "Olamaboro IV", "Olamaboro V",
+  ],
+  "Omala": [
+    "Abejukolo I", "Abejukolo II", "Opoda/Ofejiji", "Bagana", "Okpatala",
+    "Akpacha", "Bagaji", "Icheke Ajopachi", "Ogodu", "Oji-Aji", "Olla",
+  ],
+  "Yagba East": [
+    "Ife Olukotun I", "Ife Olukotun II", "Ponyan", "Alu/Igbagun/Oranre",
+    "Ejuku", "Jege/Oke/Agi Ogbom/Isao", "Makutu I", "Makutu II", "Itedo",
+    "Ilafin/Idofin/Odo - Ogba",
+  ],
+  "Yagba West": [
+    "Ejiba", "Odo Eri Okoto", "Odo Ere Oke Ere", "Isaulu Esa/Okoloke/Okunran",
+    "Iyamerin/Igbaruku", "Odo Ara Omi Ogga", "Ogbe", "Oke Egbe I",
+    "Oke Egbe II", "Oke Egbe III", "Oke Egbe IV", "Odo Egbe I", "Odo Egbe II",
+    "Odo Egbe",
+  ],
+};
+
 /* ---------- CSV export ---------- */
 export function exportCsv(filename, rows) {
   if (!rows?.length) return;

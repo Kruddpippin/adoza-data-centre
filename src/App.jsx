@@ -6,6 +6,7 @@ import { Spinner } from "@/components/ui";
 import { ADMIN_ROLES } from "@/lib/utils";
 
 const Login = lazy(() => import("@/pages/Login"));
+const YouthPortal = lazy(() => import("@/pages/YouthPortal"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Youths = lazy(() => import("@/pages/Youths"));
 const YouthForm = lazy(() => import("@/pages/YouthForm"));
@@ -23,6 +24,7 @@ export default function App() {
     <Suspense fallback={<Spinner className="min-h-screen" />}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/my-registration" element={<YouthPortal />} />
 
         <Route
           element={
