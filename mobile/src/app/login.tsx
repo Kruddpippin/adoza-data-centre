@@ -2,9 +2,14 @@ import { useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { Button, Card, Field, Input } from "@/components/ui";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const DEMO_ACCOUNTS = [
   { label: "Admin", email: "admin@adoza.ng" },
@@ -13,12 +18,27 @@ const DEMO_ACCOUNTS = [
   { label: "Committee", email: "committee@adoza.ng" },
 ];
 
+// Deliberately not using the URL/URLSearchParams API here — avoids depending on
+// whether this RN/Hermes version has a spec-compliant polyfill. Handles both the
+// PKCE ("?code=...") and implicit ("#access_token=...&refresh_token=...") shapes.
+function parseRedirectParams(url: string): Record<string, string> {
+  const query = url.split(/[?#]/).slice(1).join("&");
+  const params: Record<string, string> = {};
+  for (const pair of query.split("&")) {
+    if (!pair) continue;
+    const [key, value] = pair.split("=");
+    if (key) params[decodeURIComponent(key)] = decodeURIComponent(value ?? "");
+  }
+  return params;
+}
+
 export default function Login() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const submit = async () => {
@@ -30,6 +50,43 @@ export default function Login() {
       setError(err.message === "Invalid login credentials" ? "Incorrect email or password." : err.message);
     }
     // On success, the root layout's Stack.Protected guard reacts to the session change automatically.
+  };
+
+  const continueWithGoogle = async () => {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      const redirectUri = Linking.createURL("/login");
+      const { data, error: startErr } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: redirectUri, skipBrowserRedirect: true },
+      });
+      if (startErr || !data?.url) throw startErr ?? new Error("Could not start Google sign-in.");
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+      if (result.type !== "success") return;
+
+      const params = parseRedirectParams(result.url);
+      if (params.code) {
+        const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(params.code);
+        if (exchangeErr) throw exchangeErr;
+      } else if (params.access_token && params.refresh_token) {
+        const { error: sessionErr } = await supabase.auth.setSession({
+          access_token: params.access_token,
+          refresh_token: params.refresh_token,
+        });
+        if (sessionErr) throw sessionErr;
+      } else if (params.error_description) {
+        throw new Error(params.error_description);
+      } else {
+        throw new Error("Google sign-in did not return a session.");
+      }
+      // AuthContext's onAuthStateChange listener picks up the new session automatically.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed.");
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const quickFill = (demoEmail: string) => {
@@ -52,6 +109,17 @@ export default function Login() {
         </View>
 
         <Card className="gap-4 p-5">
+          <Button variant="outline" loading={googleLoading} disabled={loading} onPress={continueWithGoogle}>
+            <Ionicons name="logo-google" size={16} color="#1a5c3a" />
+            <Text className="text-sm font-semibold text-foreground">Continue with Google</Text>
+          </Button>
+
+          <View className="flex-row items-center gap-3">
+            <View className="h-px flex-1 bg-border" />
+            <Text className="text-[11px] uppercase tracking-wider text-muted-foreground">or</Text>
+            <View className="h-px flex-1 bg-border" />
+          </View>
+
           <Field label="Email address" required>
             <Input
               autoCapitalize="none"
@@ -81,7 +149,7 @@ export default function Login() {
               </Pressable>
             </View>
           </Field>
-          <Button onPress={submit} loading={loading}>
+          <Button onPress={submit} loading={loading} disabled={googleLoading}>
             Sign in
           </Button>
 
