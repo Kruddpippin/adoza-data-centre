@@ -1,15 +1,22 @@
 import { Navigate, useLocation, Link } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useMyStaffApplication } from "@/hooks/useData";
 import { Spinner } from "@/components/ui";
 
 export function ProtectedRoute({ children, roles }) {
-  const { session, role, loading } = useAuth();
+  const { session, user, role, loading } = useAuth();
   const location = useLocation();
+  // Only ever queried for role-less sessions — a real staff session passes null and the
+  // query stays disabled, so this costs nothing for the common case.
+  const { data: application, isLoading: applicationLoading } = useMyStaffApplication(role ? null : user?.id);
 
   if (loading) return <Spinner className="min-h-screen" />;
   if (!session) return <Navigate to="/login" replace state={{ from: location }} />;
-  if (!role) return <Navigate to="/my-registration" replace />;
+  if (!role) {
+    if (applicationLoading) return <Spinner className="min-h-screen" />;
+    return <Navigate to={application ? "/staff-application" : "/my-registration"} replace />;
+  }
 
   if (roles && role && !roles.includes(role)) {
     return (

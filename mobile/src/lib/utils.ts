@@ -21,15 +21,16 @@ export const initialsOf = (name = "") =>
   name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "U";
 
 /* ---------- domain constants ---------- */
-export const ROLES = ["super_admin", "campaign_admin", "enumerator", "verifier", "committee"] as const;
+export const ROLES = ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
   super_admin: "Super Admin",
-  campaign_admin: "Campaign Admin",
+  campaign_admin: "Admin",
   enumerator: "Enumerator",
-  verifier: "Verifier",
-  committee: "Committee",
+  validator: "Validator",
+  committee: "Benefits Committee",
+  field_agent: "Field Agent",
 };
 
 // Tailwind class-pair equivalents, expressed as [backgroundHex, textHex] for RN inline styles.
@@ -37,8 +38,9 @@ export const ROLE_COLORS: Record<Role, [string, string]> = {
   super_admin: ["#f3e8ff", "#7e22ce"],
   campaign_admin: ["#15803d1a", "#15803d"],
   enumerator: ["#dbeafe", "#1d4ed8"],
-  verifier: ["#fef3c7", "#b45309"],
+  validator: ["#fef3c7", "#b45309"],
   committee: ["#ccfbf1", "#0f766e"],
+  field_agent: ["#e0f2fe", "#0369a1"],
 };
 
 export const ADMIN_ROLES: Role[] = ["super_admin", "campaign_admin"];

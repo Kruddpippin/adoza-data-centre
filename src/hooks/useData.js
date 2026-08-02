@@ -242,6 +242,58 @@ export function useUpdateProfile() {
   });
 }
 
+/* ============ staff applications ============ */
+// RLS scopes this to the caller's own application row — no explicit filter needed.
+export function useMyStaffApplication(userId) {
+  return useQuery({
+    queryKey: ["my-staff-application", userId],
+    enabled: !!userId,
+    queryFn: () => run(supabase.from("staff_applications").select("*").maybeSingle()),
+  });
+}
+
+export function useSubmitStaffApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (values) => run(supabase.from("staff_applications").insert(values).select().single()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-staff-application"] }),
+  });
+}
+
+export function usePendingApplications() {
+  return useQuery({
+    queryKey: ["staff-applications", "pending"],
+    queryFn: () =>
+      run(
+        supabase
+          .from("staff_applications")
+          .select("*")
+          .eq("status", "pending")
+          .order("created_at", { ascending: true })
+      ),
+  });
+}
+
+export function useApproveApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (applicationId) => run(supabase.rpc("approve_staff_application", { application_id: applicationId })),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["staff-applications"] });
+      qc.invalidateQueries({ queryKey: ["profiles"] });
+    },
+  });
+}
+
+export function useRejectApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (applicationId) =>
+      run(supabase.from("staff_applications").update({ status: "rejected" }).eq("id", applicationId).select().single()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["staff-applications"] }),
+  });
+}
+
 /* ============ notifications ============ */
 export function useNotifications(userId) {
   return useQuery({

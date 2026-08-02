@@ -1,15 +1,79 @@
 import { useState } from "react";
-import { UserCog } from "lucide-react";
-import { useProfiles, useUpdateProfile } from "@/hooks/useData";
+import { UserCog, Check, X } from "lucide-react";
+import {
+  useProfiles, useUpdateProfile, usePendingApplications, useApproveApplication, useRejectApplication,
+} from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
-import { Select, Badge, Spinner, ErrorState, Table, Th, Td } from "@/components/ui";
-import { ROLES, ROLE_LABELS, ROLE_COLORS, formatDate, cn } from "@/lib/utils";
+import { Button, Select, Badge, Spinner, ErrorState, Table, Th, Td, Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
+import { ROLES, ROLE_LABELS, ROLE_COLORS, OWNER_EMAIL, formatDate, cn } from "@/lib/utils";
 
 const STATUS_META = {
   active: { label: "Active", cls: "bg-emerald-100 text-emerald-700" },
   suspended: { label: "Suspended", cls: "bg-amber-100 text-amber-700" },
   deactivated: { label: "Deactivated", cls: "bg-red-100 text-red-700" },
 };
+
+function PendingApplications() {
+  const { data: applications, isLoading, isError, refetch } = usePendingApplications();
+  const approve = useApproveApplication();
+  const reject = useRejectApplication();
+  const [error, setError] = useState("");
+  const [actingOn, setActingOn] = useState(null);
+
+  if (isLoading) return <Spinner />;
+  if (isError) return <ErrorState onRetry={refetch} />;
+  if (!applications?.length) return null;
+
+  const act = async (mutation, id) => {
+    setError("");
+    setActingOn(id);
+    try {
+      await mutation.mutateAsync(id);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActingOn(null);
+    }
+  };
+
+  return (
+    <Card className="animate-fade-up">
+      <CardHeader><CardTitle>Pending applications ({applications.length})</CardTitle></CardHeader>
+      <CardContent className="space-y-2">
+        {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+        {applications.map((a) => (
+          <div key={a.id} className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">{a.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {a.email} · applying for <span className="font-medium">{ROLE_LABELS[a.applied_role]}</span> · {formatDate(a.created_at)}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                loading={actingOn === a.id && reject.isPending}
+                disabled={actingOn === a.id}
+                onClick={() => act(reject, a.id)}
+              >
+                <X className="h-4 w-4" /> Reject
+              </Button>
+              <Button
+                size="sm"
+                loading={actingOn === a.id && approve.isPending}
+                disabled={actingOn === a.id}
+                onClick={() => act(approve, a.id)}
+              >
+                <Check className="h-4 w-4" /> Approve
+              </Button>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Team() {
   const { user } = useAuth();
@@ -34,9 +98,11 @@ export default function Team() {
       <div className="animate-fade-up">
         <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">Team</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Programme staff accounts, roles and access. New staff sign up with email and default to the Enumerator role.
+          Programme staff accounts, roles and access. Prospective staff apply from the login page and are approved here.
         </p>
       </div>
+
+      <PendingApplications />
 
       {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
@@ -69,7 +135,11 @@ export default function Team() {
                       onChange={(e) => change(p.id, { role: e.target.value })}
                       aria-label={`Role for ${p.name}`}
                     >
-                      {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                      {/* Super Admin is reserved for the owner account (precious.op2013@gmail.com)
+                          and isn't assignable to anyone else from this dropdown. */}
+                      {ROLES.filter((r) => r !== "super_admin" || p.email === OWNER_EMAIL).map((r) => (
+                        <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                      ))}
                     </Select>
                   )}
                 </Td>

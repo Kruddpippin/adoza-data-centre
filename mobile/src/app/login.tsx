@@ -9,7 +9,7 @@ import { Button, Card, Field, Input } from "@/components/ui";
 const DEMO_ACCOUNTS = [
   { label: "Admin", email: "admin@adoza.ng" },
   { label: "Enumerator", email: "enumerator@adoza.ng" },
-  { label: "Verifier", email: "verifier@adoza.ng" },
+  { label: "Validator", email: "verifier@adoza.ng" },
   { label: "Committee", email: "committee@adoza.ng" },
 ];
 

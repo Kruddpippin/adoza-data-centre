@@ -24,26 +24,33 @@ export const initialsOf = (name = "") =>
   name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "U";
 
 /* ---------- domain constants ---------- */
-export const ROLES = ["super_admin", "campaign_admin", "enumerator", "verifier", "committee"];
+export const ROLES = ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"];
 
 export const ROLE_LABELS = {
   super_admin: "Super Admin",
-  campaign_admin: "Campaign Admin",
+  campaign_admin: "Admin",
   enumerator: "Enumerator",
-  verifier: "Verifier",
-  committee: "Committee",
+  validator: "Validator",
+  committee: "Benefits Committee",
+  field_agent: "Field Agent",
 };
 
 export const ROLE_COLORS = {
   super_admin: "bg-purple-100 text-purple-700",
   campaign_admin: "bg-primary/10 text-primary",
   enumerator: "bg-blue-100 text-blue-700",
-  verifier: "bg-amber-100 text-amber-700",
+  validator: "bg-amber-100 text-amber-700",
   committee: "bg-teal-100 text-teal-700",
+  field_agent: "bg-sky-100 text-sky-700",
 };
 
 export const ADMIN_ROLES = ["super_admin", "campaign_admin"];
 export const isAdminRole = (r) => ADMIN_ROLES.includes(r);
+
+// Roles a prospective staff member can self-apply for — admin-tier roles are never
+// self-service, they're only ever granted directly by an existing admin.
+export const APPLICABLE_ROLES = ["field_agent", "validator", "enumerator"];
+export const OWNER_EMAIL = "precious.op2013@gmail.com";
 
 export const VERIFICATION_META = {
   pending:  { label: "Pending",  cls: "bg-amber-100 text-amber-700" },
