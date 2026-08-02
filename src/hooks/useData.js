@@ -113,6 +113,7 @@ export function useSaveYouth() {
       qc.invalidateQueries({ queryKey: ["youths"] });
       qc.invalidateQueries({ queryKey: ["youth", youth.id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["my-youth-record"] });
     },
   });
 }

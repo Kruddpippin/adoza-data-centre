@@ -37,7 +37,13 @@ function YouthSignIn() {
     setLoading(true);
     const { error: err } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/login` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+        // Lets the handle_new_user() trigger tell a youth self-service signup apart
+        // from a staff account (which is always admin-provisioned with a password) —
+        // without this, every new signup was defaulting to a staff role.
+        data: { signup_source: "youth_portal" },
+      },
     });
     setLoading(false);
     if (err) {

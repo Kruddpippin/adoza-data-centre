@@ -1,26 +1,27 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LogOut, Wrench } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  useMyYouthRecord, useClaimYouthRecord, useMyFunding, useSaveYouth, useSkills,
+  useMyYouthRecord, useClaimYouthRecord, useSaveYouth, useSkills,
 } from "@/hooks/useData";
 import {
   Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge,
 } from "@/components/ui";
 import {
-  KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META, FUNDING_META,
-  formatNaira, formatDate,
+  KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
 } from "@/lib/utils";
 
-function PortalHeader() {
+function PortalHeader({ youth }) {
   const { signOut } = useAuth();
   return (
     <div className="mb-6 flex items-center justify-between">
       <div className="flex items-center gap-2.5">
         <img src="/kogi-logo.png" alt="Kogi State Government" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
         <div>
-          <p className="font-display text-sm font-bold tracking-tight">ADOZA Data Centre</p>
+          <p className="font-display text-sm font-bold tracking-tight">
+            {youth ? `${youth.first_name} ${youth.last_name}` : "ADOZA Data Centre"}
+          </p>
           <p className="text-[11px] text-muted-foreground">Youth self-service portal</p>
         </div>
       </div>
@@ -32,7 +33,6 @@ function PortalHeader() {
 }
 
 function StatusView({ youth }) {
-  const { data: funding = [] } = useMyFunding(youth.id);
   const meta = VERIFICATION_META[youth.verification_status];
 
   return (
@@ -44,19 +44,15 @@ function StatusView({ youth }) {
           {meta && <Badge className={meta.cls}>{meta.label}</Badge>}
           {youth.is_approved_beneficiary && <Badge className="bg-accent/15 text-accent-foreground">Beneficiary</Badge>}
         </div>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle>Eligibility score</CardTitle></CardHeader>
-        <CardContent>
-          <p className="stat-value text-4xl text-primary">{youth.eligibility_score ?? "—"}</p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${youth.eligibility_score ?? 0}%` }} />
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Weighted across age, employment, skills, experience, needs and ward coverage.
-          </p>
-        </CardContent>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {youth.verification_status === "verified"
+            ? "Your registration has been verified by the programme team."
+            : youth.verification_status === "rejected"
+              ? "Your registration could not be verified."
+              : youth.verification_status === "flagged"
+                ? "Your registration has been flagged for review."
+                : "Your registration is awaiting review by the programme team."}
+        </p>
       </Card>
 
       {youth.verification_notes && (
@@ -67,33 +63,6 @@ function StatusView({ youth }) {
           </CardContent>
         </Card>
       )}
-
-      {funding.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle>Funding</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {funding.map((f) => (
-              <div key={f.id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
-                <div>
-                  <p className="font-medium">{formatNaira(f.amount_approved)}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(f.created_at)}</p>
-                </div>
-                <Badge className={FUNDING_META[f.status]?.cls}>{FUNDING_META[f.status]?.label}</Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader><CardTitle>Registration details</CardTitle></CardHeader>
-        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
-          <p><span className="text-muted-foreground">Ward / LGA:</span> {youth.ward}, {youth.lga}</p>
-          <p><span className="text-muted-foreground">Phone:</span> {youth.phone}</p>
-          <p><span className="text-muted-foreground">Employment:</span> {EMPLOYMENT_LABELS[youth.employment_status] ?? "—"}</p>
-          <p><span className="text-muted-foreground">Registered:</span> {formatDate(youth.created_at)}</p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -278,7 +247,7 @@ export default function YouthPortal() {
 
   return (
     <div className="mx-auto min-h-screen max-w-2xl p-4 lg:p-8">
-      <PortalHeader />
+      <PortalHeader youth={record} />
       {isLoading ? (
         <Spinner />
       ) : isError ? (
