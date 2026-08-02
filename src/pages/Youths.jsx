@@ -13,7 +13,7 @@ export default function Youths() {
   const [lga, setLga] = useState("");
   const { data: youths, isLoading, isError, refetch } = useYouths({ search: search || undefined, status: status || undefined, lga: lga || undefined });
 
-  const canRegister = isAdminRole(role) || role === "enumerator";
+  const canRegister = isAdminRole(role) || role === "enumerator" || role === "field_agent";
 
   const handleExport = () =>
     exportCsv(

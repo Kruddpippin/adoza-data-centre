@@ -23,7 +23,7 @@ export default function YouthsList() {
     lga: lga || undefined,
   });
 
-  const canRegister = isAdminRole(role) || role === "enumerator";
+  const canRegister = isAdminRole(role) || role === "enumerator" || role === "field_agent";
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["bottom"]}>

@@ -35,7 +35,7 @@ export default function YouthDetail() {
 
   const canVerify = isAdminRole(role) || role === "validator";
   const canApproveBeneficiary = isAdminRole(role) || role === "committee";
-  const canEdit = isAdminRole(role) || (role === "enumerator" && youth.created_by === user?.id && youth.verification_status === "pending");
+  const canEdit = isAdminRole(role) || ((role === "enumerator" || role === "field_agent") && youth.created_by === user?.id && youth.verification_status === "pending");
   const meta = VERIFICATION_META[youth.verification_status];
 
   const setVerification = (status, extraNotes) =>
