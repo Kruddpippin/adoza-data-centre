@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
+import { AccountMenuButton } from "@/components/account-menu";
+
 export default function TabLayout() {
   return (
     <Tabs
@@ -8,6 +10,7 @@ export default function TabLayout() {
         headerTintColor: "#0f3d24",
         tabBarActiveTintColor: "#1a5c3a",
         tabBarInactiveTintColor: "#8a9a94",
+        headerRight: () => <AccountMenuButton />,
       }}
     >
       <Tabs.Screen
