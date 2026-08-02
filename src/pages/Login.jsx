@@ -290,6 +290,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   if (!authLoading && session) {
@@ -307,6 +308,20 @@ export default function Login() {
       return;
     }
     navigate(location.state?.from?.pathname ?? "/dashboard", { replace: true });
+  };
+
+  const continueWithGoogle = async () => {
+    setError("");
+    setGoogleLoading(true);
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/login` },
+    });
+    if (err) {
+      setError(err.message);
+      setGoogleLoading(false);
+    }
+    // On success the browser navigates away to Google, so no further state update happens here.
   };
 
   const quickFill = (demoEmail) => {
@@ -363,6 +378,23 @@ export default function Login() {
           {mode === "staff" ? (
             staffView === "signin" ? (
               <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  loading={googleLoading}
+                  disabled={loading}
+                  onClick={continueWithGoogle}
+                >
+                  <GoogleIcon /> Continue with Google
+                </Button>
+
+                <div className="my-4 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
                 <form onSubmit={submit} className="space-y-4" noValidate>
                   <Field label="Email address" required>
                     <Input
@@ -396,7 +428,7 @@ export default function Login() {
                       </button>
                     </div>
                   </Field>
-                  <Button type="submit" className="w-full" loading={loading}>
+                  <Button type="submit" className="w-full" loading={loading} disabled={googleLoading}>
                     <LogIn className="h-4 w-4" /> Sign in
                   </Button>
                 </form>
