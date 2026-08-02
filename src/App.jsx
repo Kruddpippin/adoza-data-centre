@@ -7,6 +7,7 @@ import { ADMIN_ROLES } from "@/lib/utils";
 
 const Login = lazy(() => import("@/pages/Login"));
 const YouthPortal = lazy(() => import("@/pages/YouthPortal"));
+const OAuthAuthorize = lazy(() => import("@/pages/OAuthAuthorize"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Youths = lazy(() => import("@/pages/Youths"));
 const YouthForm = lazy(() => import("@/pages/YouthForm"));
@@ -25,6 +26,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/my-registration" element={<YouthPortal />} />
+        <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
 
         <Route
           element={
