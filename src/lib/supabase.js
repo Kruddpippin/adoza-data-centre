@@ -9,4 +9,12 @@ if (!url || !key) {
   console.error("Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — check environment configuration.");
 }
 
-export const supabase = createClient(url || "https://missing-config.supabase.co", key || "missing-config");
+export const supabase = createClient(url || "https://missing-config.supabase.co", key || "missing-config", {
+  auth: {
+    // Explicit rather than relying on the SDK default — this is what picks up the
+    // #access_token=... fragment from magic-link emails when the page first loads.
+    detectSessionInUrl: true,
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
