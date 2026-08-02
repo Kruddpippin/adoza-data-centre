@@ -24,6 +24,73 @@ function GoogleIcon(props) {
   );
 }
 
+function YouthPasswordSignIn() {
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const { error: err } = await signIn(email.trim(), password);
+    setLoading(false);
+    if (err) {
+      setError(err.message === "Invalid login credentials" ? "Incorrect email or password." : err.message);
+      return;
+    }
+    navigate(location.state?.from?.pathname ?? "/dashboard", { replace: true });
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-4" noValidate>
+      <Field label="Your email address" required>
+        <Input
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@gmail.com"
+        />
+      </Field>
+      <Field label="Password" required error={error}>
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••••"
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+      </Field>
+      <Button type="submit" className="w-full" loading={loading}>
+        <LogIn className="h-4 w-4" /> Sign in
+      </Button>
+      <p className="text-center text-[11px] text-muted-foreground">
+        Only works if you've set a password from your portal. Otherwise use the email link or Google option instead.
+      </p>
+    </form>
+  );
+}
+
 function YouthSignIn() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -218,6 +285,7 @@ export default function Login() {
   const location = useLocation();
   const [mode, setMode] = useState("staff");
   const [staffView, setStaffView] = useState("signin");
+  const [youthView, setYouthView] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -366,8 +434,28 @@ export default function Login() {
                 </button>
               </>
             )
+          ) : youthView === "signin" ? (
+            <>
+              <YouthPasswordSignIn />
+              <button
+                type="button"
+                onClick={() => setYouthView("register")}
+                className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
+              >
+                New here? Register
+              </button>
+            </>
           ) : (
-            <YouthSignIn />
+            <>
+              <YouthSignIn />
+              <button
+                type="button"
+                onClick={() => setYouthView("signin")}
+                className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
+              >
+                Already registered? Sign in instead
+              </button>
+            </>
           )}
         </Card>
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LogOut, Wrench } from "lucide-react";
+import { LogOut, Wrench, KeyRound, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import {
   useMyYouthRecord, useClaimYouthRecord, useSaveYouth, useSkills,
 } from "@/hooks/useData";
@@ -11,6 +12,65 @@ import {
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
 } from "@/lib/utils";
+
+function PasswordSettings() {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSaved(false);
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords don't match.");
+      return;
+    }
+    setLoading(true);
+    const { error: err } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setPassword("");
+    setConfirm("");
+    setSaved(true);
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Sign in with a password</CardTitle></CardHeader>
+      <CardContent>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Set a password so you can sign in directly next time, instead of waiting for an email link.
+        </p>
+        <form onSubmit={submit} className="space-y-3" noValidate>
+          <Field label="New password" required error={error}>
+            <Input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" />
+          </Field>
+          <Field label="Confirm password" required>
+            <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••••" />
+          </Field>
+          {saved && (
+            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Password set. Use it next time you sign in.
+            </p>
+          )}
+          <Button type="submit" variant="outline" className="w-full" loading={loading}>
+            <KeyRound className="h-4 w-4" /> Save password
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
 
 function PortalHeader({ youth }) {
   const { signOut } = useAuth();
@@ -63,6 +123,8 @@ function StatusView({ youth }) {
           </CardContent>
         </Card>
       )}
+
+      <PasswordSettings />
     </div>
   );
 }
