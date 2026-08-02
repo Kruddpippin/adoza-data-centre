@@ -11,7 +11,7 @@ import { useSaveYouth, useSkills, useYouth } from "@/hooks/useData";
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Field, Input, Spinner } from "@/components/ui";
 import { SelectField } from "@/components/select-modal";
-import { EDUCATION_LEVELS, EMPLOYMENT_LABELS, KOGI_LGAS } from "@/lib/utils";
+import { EDUCATION_LEVELS, EMPLOYMENT_LABELS, KOGI_LGAS, KOGI_WARDS_BY_LGA } from "@/lib/utils";
 
 const EMPTY = {
   photo_url: "",
@@ -92,6 +92,11 @@ export function YouthForm({ youthId }: { youthId?: string }) {
   }, [existing, youthId]);
 
   const set = (key: keyof typeof EMPTY) => (value: string | boolean) => setForm((f) => ({ ...f, [key]: value }));
+
+  const setLga = (lga: string) =>
+    setForm((f) => ({ ...f, lga, ward: (KOGI_WARDS_BY_LGA[lga] ?? []).includes(f.ward) ? f.ward : "" }));
+
+  const wardOptions = KOGI_WARDS_BY_LGA[form.lga] ?? [];
 
   const captureGps = async () => {
     setGpsLoading(true);
@@ -275,16 +280,22 @@ export function YouthForm({ youthId }: { youthId?: string }) {
         <Field label="Home address">
           <Input value={form.address} onChangeText={(v) => set("address")(v)} multiline numberOfLines={2} className="h-20 pt-2" />
         </Field>
-        <Field label="Ward" required error={errors.ward}>
-          <Input value={form.ward} onChangeText={(v) => set("ward")(v)} placeholder="e.g. Lokoja A" />
-        </Field>
         <Field label="LGA" required error={errors.lga}>
           <SelectField
             label="LGA"
             value={form.lga}
-            onChange={(v) => set("lga")(v)}
+            onChange={setLga}
             placeholder="Select LGA…"
             options={KOGI_LGAS.map((l) => ({ value: l, label: l }))}
+          />
+        </Field>
+        <Field label="Ward" required error={errors.ward}>
+          <SelectField
+            label="Ward"
+            value={form.ward}
+            onChange={(v) => set("ward")(v)}
+            placeholder={form.lga ? "Select ward…" : "Select LGA first…"}
+            options={wardOptions.map((w) => ({ value: w, label: w }))}
           />
         </Field>
         <View className="flex-row gap-3">
