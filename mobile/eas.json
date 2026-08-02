@@ -12,10 +12,12 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://xqgresobovhqrvzidsje.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_SMT1bUFA2lOo9uOlMemdfA_LdWkxNWS"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production"
     }
   },
   "submit": {

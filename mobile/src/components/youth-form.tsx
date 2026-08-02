@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
+import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 import { useAuth } from "@/context/AuthContext";
 import { useSaveYouth, useSkills, useYouth } from "@/hooks/useData";
+import { supabase } from "@/lib/supabase";
 import { Button, Card, Field, Input, Spinner } from "@/components/ui";
 import { SelectField } from "@/components/select-modal";
 import { EDUCATION_LEVELS, EMPLOYMENT_LABELS, KOGI_LGAS } from "@/lib/utils";
 
 const EMPTY = {
+  photo_url: "",
   first_name: "",
   last_name: "",
   gender: "male",
@@ -62,6 +65,8 @@ export function YouthForm({ youthId }: { youthId?: string }) {
   const [gpsStatus, setGpsStatus] = useState("");
   const [gpsLoading, setGpsLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [photoStatus, setPhotoStatus] = useState("");
+  const [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(() => {
     if (existing && youthId) {
@@ -112,6 +117,35 @@ export function YouthForm({ youthId }: { youthId?: string }) {
     }
   };
 
+  const capturePhoto = async () => {
+    setPhotoStatus("");
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      setPhotoStatus("Camera permission denied.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.6 });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    setPhotoLoading(true);
+    setPhotoStatus("Uploading…");
+    try {
+      const uri = result.assets[0].uri;
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+      const { error } = await supabase.storage.from("youth-photos").upload(path, blob, { contentType: "image/jpeg" });
+      if (error) throw error;
+      const { data } = supabase.storage.from("youth-photos").getPublicUrl(path);
+      set("photo_url")(data.publicUrl);
+      setPhotoStatus("Photo uploaded");
+    } catch (err: any) {
+      setPhotoStatus(`Upload failed: ${err.message}`);
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
+
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.first_name.trim()) e.first_name = "Required";
@@ -130,6 +164,7 @@ export function YouthForm({ youthId }: { youthId?: string }) {
     if (!validate()) return;
     const payload: Record<string, any> = {
       ...form,
+      photo_url: form.photo_url || null,
       email: form.email || null,
       occupation: form.occupation || null,
       business_name: form.business_name || null,
@@ -154,6 +189,26 @@ export function YouthForm({ youthId }: { youthId?: string }) {
 
   return (
     <ScrollView className="flex-1 bg-background" contentContainerClassName="gap-4 p-4 pb-10">
+      <Card className="gap-3">
+        <Text className="text-sm font-bold text-foreground">Photo</Text>
+        <View className="flex-row items-center gap-3">
+          {form.photo_url ? (
+            <Image source={{ uri: form.photo_url }} className="h-16 w-16 rounded-lg" />
+          ) : (
+            <View className="h-16 w-16 items-center justify-center rounded-lg bg-muted">
+              <Ionicons name="person-outline" size={24} color="#8a9a94" />
+            </View>
+          )}
+          <View className="flex-1 gap-1.5">
+            <Button variant="outline" className="h-9 flex-row gap-1.5 self-start px-3" loading={photoLoading} onPress={capturePhoto}>
+              <Ionicons name="camera-outline" size={16} color="#101a16" />
+              <Text className="text-sm font-semibold text-foreground">{form.photo_url ? "Retake photo" : "Take photo"}</Text>
+            </Button>
+            {photoStatus ? <Text className="text-xs text-muted-foreground">{photoStatus}</Text> : null}
+          </View>
+        </View>
+      </Card>
+
       <Card className="gap-3">
         <Text className="text-sm font-bold text-foreground">Personal details</Text>
         <Field label="First name" required error={errors.first_name}>

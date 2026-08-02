@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -72,12 +72,17 @@ export default function YouthDetail() {
       <ScrollView className="flex-1 bg-background" contentContainerClassName="gap-4 p-4 pb-10">
         <View className="gap-1">
           <View className="flex-row flex-wrap items-center justify-between gap-3">
-            <View className="flex-row flex-wrap items-center gap-2">
-              <Text className="text-xl font-bold tracking-tight text-foreground">
-                {youth.first_name} {youth.last_name}
-              </Text>
-              {meta ? <Badge label={meta.label} bg={meta.bg} fg={meta.fg} /> : null}
-              {youth.is_approved_beneficiary ? <Badge label="Beneficiary" bg="#1a5c3a1a" fg="#1a5c3a" /> : null}
+            <View className="flex-row flex-wrap items-center gap-3">
+              {youth.photo_url ? (
+                <Image source={{ uri: youth.photo_url }} className="h-12 w-12 rounded-full" />
+              ) : null}
+              <View className="flex-row flex-wrap items-center gap-2">
+                <Text className="text-xl font-bold tracking-tight text-foreground">
+                  {youth.first_name} {youth.last_name}
+                </Text>
+                {meta ? <Badge label={meta.label} bg={meta.bg} fg={meta.fg} /> : null}
+                {youth.is_approved_beneficiary ? <Badge label="Beneficiary" bg="#1a5c3a1a" fg="#1a5c3a" /> : null}
+              </View>
             </View>
             {canEdit && (
               <Button variant="outline" className="h-9 px-3" onPress={() => router.push(`/youths/${id}/edit`)}>

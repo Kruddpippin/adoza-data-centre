@@ -49,10 +49,19 @@
       ],
       "@react-native-community/datetimepicker",
       [
+        "expo-image-picker",
+        {
+          "cameraPermission": "ADOZA uses your camera to capture a photo of the youth during door-to-door registration.",
+          "photosPermission": false
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
-            "buildArchs": ["arm64-v8a"],
+            "buildArchs": [
+              "arm64-v8a"
+            ],
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true
           }
@@ -69,6 +78,12 @@
         "projectId": "63d897ab-f1e5-4139-aa16-c71f936e0d90"
       }
     },
-    "owner": "kruddpippins-inc"
+    "owner": "kruddpippins-inc",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/63d897ab-f1e5-4139-aa16-c71f936e0d90"
+    }
   }
 }
