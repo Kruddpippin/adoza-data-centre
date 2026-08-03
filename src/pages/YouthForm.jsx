@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, MapPin, Save, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, MapPin, Save, Plus, Trash2, Camera, User } from "lucide-react";
 import { useYouth, useSaveYouth, useSkills } from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner } from "@/components/ui";
 import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS } from "@/lib/utils";
 
 const EMPTY = {
-  first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
+  photo_url: "", first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
   email: "", address: "", ward: "", lga: "", occupation: "", highest_education: "Secondary",
   employment_status: "unemployed", monthly_income: "", business_name: "", business_address: "",
   government_id: "", latitude: "", longitude: "", consent_given: false,
@@ -26,6 +27,8 @@ export default function YouthForm() {
   const [skillRows, setSkillRows] = useState([]);
   const [errors, setErrors] = useState({});
   const [gpsStatus, setGpsStatus] = useState("");
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
 
   useEffect(() => {
     if (existing && id) {
@@ -80,6 +83,25 @@ export default function YouthForm() {
     );
   };
 
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError("");
+    setPhotoUploading(true);
+    try {
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+      const { error } = await supabase.storage.from("youth-photos").upload(path, file, { contentType: file.type || "image/jpeg" });
+      if (error) throw error;
+      const { data } = supabase.storage.from("youth-photos").getPublicUrl(path);
+      setForm((f) => ({ ...f, photo_url: data.publicUrl }));
+    } catch (err) {
+      setPhotoError(err.message);
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
   const validate = () => {
     const e = {};
     if (!form.first_name.trim()) e.first_name = "Required";
@@ -99,6 +121,7 @@ export default function YouthForm() {
     if (!validate()) return;
     const payload = {
       ...form,
+      photo_url: form.photo_url || null,
       email: form.email || null,
       occupation: form.occupation || null,
       business_name: form.business_name || null,
@@ -133,6 +156,28 @@ export default function YouthForm() {
       </div>
 
       <form onSubmit={submit} className="space-y-4" noValidate>
+        <Card className="animate-fade-up">
+          <CardHeader><CardTitle>Photo</CardTitle></CardHeader>
+          <CardContent className="flex items-center gap-4">
+            {form.photo_url ? (
+              <img src={form.photo_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
+                <User className="h-6 w-6 text-muted-foreground" aria-hidden />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted">
+                <Camera className="h-4 w-4" />
+                {form.photo_url ? "Retake photo" : "Take / upload photo"}
+                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} disabled={photoUploading} />
+              </label>
+              {photoUploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
+              {photoError && <p className="text-xs text-destructive">{photoError}</p>}
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="animate-fade-up">
           <CardHeader><CardTitle>Personal details</CardTitle></CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">

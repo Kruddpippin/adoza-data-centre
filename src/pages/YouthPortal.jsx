@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
-  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2,
+  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2, Camera, User,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -12,27 +12,12 @@ import {
 import {
   Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge, Modal,
 } from "@/components/ui";
+import { NotificationsBell, useDropdown } from "@/components/NotificationsBell";
+import { PasswordSettingsForm } from "@/components/PasswordSettingsForm";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
   NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, formatDate, formatNaira, initialsOf, cn,
 } from "@/lib/utils";
-
-function useDropdown() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
-    const onKey = (e) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("mousedown", onClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-  return { open, setOpen, ref };
-}
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -42,62 +27,6 @@ function InfoRow({ icon: Icon, label, value }) {
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
         <p className="text-sm">{value || "—"}</p>
       </div>
-    </div>
-  );
-}
-
-function PasswordSettings() {
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSaved(false);
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    if (password !== confirm) {
-      setError("Passwords don't match.");
-      return;
-    }
-    setLoading(true);
-    const { error: err } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    setPassword("");
-    setConfirm("");
-    setSaved(true);
-  };
-
-  return (
-    <div>
-      <p className="mb-3 text-xs text-muted-foreground">
-        Set a password so you can sign in directly next time, instead of waiting for an email link.
-      </p>
-      <form onSubmit={submit} className="space-y-3" noValidate>
-        <Field label="New password" required error={error}>
-          <Input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" />
-        </Field>
-        <Field label="Confirm password" required>
-          <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••••" />
-        </Field>
-        {saved && (
-          <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Password set. Use it next time you sign in.
-          </p>
-        )}
-        <Button type="submit" variant="outline" className="w-full" loading={loading}>
-          <KeyRound className="h-4 w-4" /> Save password
-        </Button>
-      </form>
     </div>
   );
 }
@@ -125,6 +54,8 @@ function PortalHeader({ youth }) {
         </div>
       </Link>
 
+      <div className="flex items-center gap-1">
+      <NotificationsBell />
       <div ref={menu.ref} className="relative">
         <button
           onClick={() => menu.setOpen(!menu.open)}
@@ -181,9 +112,10 @@ function PortalHeader({ youth }) {
           </div>
         )}
       </div>
+      </div>
 
       <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Password settings">
-        <PasswordSettings />
+        <PasswordSettingsForm />
       </Modal>
       {canUpdateBank && (
         <Modal open={bankModalOpen} onClose={() => setBankModalOpen(false)} title="Update bank details">
@@ -575,7 +507,7 @@ function StatusView({ youth }) {
 }
 
 const EMPTY = {
-  first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
+  photo_url: "", first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
   email: "", address: "", ward: "", lga: "", occupation: "", highest_education: "Secondary",
   employment_status: "unemployed", monthly_income: "", business_name: "", business_address: "",
   government_id: "", latitude: "", longitude: "", needs_training: false,
@@ -589,6 +521,8 @@ function SelfRegisterForm({ user }) {
   const [skillRows, setSkillRows] = useState([]);
   const [errors, setErrors] = useState({});
   const [gpsStatus, setGpsStatus] = useState("");
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
 
   const set = (key) => (e) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
@@ -622,6 +556,25 @@ function SelfRegisterForm({ user }) {
     );
   };
 
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError("");
+    setPhotoUploading(true);
+    try {
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+      const { error } = await supabase.storage.from("youth-photos").upload(path, file, { contentType: file.type || "image/jpeg" });
+      if (error) throw error;
+      const { data } = supabase.storage.from("youth-photos").getPublicUrl(path);
+      setForm((f) => ({ ...f, photo_url: data.publicUrl }));
+    } catch (err) {
+      setPhotoError(err.message);
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
   const validate = () => {
     const e = {};
     if (!form.first_name.trim()) e.first_name = "Required";
@@ -642,6 +595,7 @@ function SelfRegisterForm({ user }) {
       await save.mutateAsync({
         ...form,
         auth_user_id: user.id,
+        photo_url: form.photo_url || null,
         occupation: form.occupation || null,
         business_name: form.business_name || null,
         business_address: form.business_address || null,
@@ -659,6 +613,28 @@ function SelfRegisterForm({ user }) {
 
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
+      <Card>
+        <CardHeader><CardTitle>Photo</CardTitle></CardHeader>
+        <CardContent className="flex items-center gap-4">
+          {form.photo_url ? (
+            <img src={form.photo_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
+              <User className="h-6 w-6 text-muted-foreground" aria-hidden />
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted">
+              <Camera className="h-4 w-4" />
+              {form.photo_url ? "Retake photo" : "Take / upload photo"}
+              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} disabled={photoUploading} />
+            </label>
+            {photoUploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
+            {photoError && <p className="text-xs text-destructive">{photoError}</p>}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader><CardTitle>Personal details</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">

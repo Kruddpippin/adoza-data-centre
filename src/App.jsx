@@ -20,6 +20,7 @@ const Funding = lazy(() => import("@/pages/Funding"));
 const Surveys = lazy(() => import("@/pages/Surveys"));
 const FieldMap = lazy(() => import("@/pages/FieldMap"));
 const Team = lazy(() => import("@/pages/Team"));
+const Broadcast = lazy(() => import("@/pages/Broadcast"));
 const Audit = lazy(() => import("@/pages/Audit"));
 
 export default function App() {
@@ -75,6 +76,14 @@ export default function App() {
               element={
                 <ProtectedRoute roles={ADMIN_ROLES}>
                   <Team />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/broadcast"
+              element={
+                <ProtectedRoute roles={ADMIN_ROLES}>
+                  <Broadcast />
                 </ProtectedRoute>
               }
             />

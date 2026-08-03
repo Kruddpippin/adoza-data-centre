@@ -345,6 +345,14 @@ export function useMarkNotificationsRead(userId) {
   });
 }
 
+// Fans out to every staff profile and every claimed candidate account (server-side, admin-only — see is_admin() in the RPC).
+export function useBroadcastNotification() {
+  return useMutation({
+    mutationFn: ({ title, message, type }) =>
+      run(supabase.rpc("broadcast_notification", { p_title: title, p_message: message, p_type: type })),
+  });
+}
+
 /* ============ audit ============ */
 export function useAuditLog() {
   return useQuery({
