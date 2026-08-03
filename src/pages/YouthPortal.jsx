@@ -105,8 +105,13 @@ function PasswordSettings() {
 function PortalHeader({ youth }) {
   const { session, signOut } = useAuth();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [bankModalOpen, setBankModalOpen] = useState(false);
+  const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
   const menu = useDropdown();
   const initials = initialsOf(youth ? `${youth.first_name} ${youth.last_name}` : "");
+
+  const canUpdateBank = !!youth?.youth_bank_details;
+  const canUpdateDelivery = !!youth?.youth_delivery_preferences;
 
   return (
     <div className="mb-6 flex items-center justify-between">
@@ -130,7 +135,7 @@ function PortalHeader({ youth }) {
           {initials || "U"}
         </button>
         {menu.open && (
-          <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border bg-card p-1.5 shadow-lg" role="menu">
+          <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border bg-card p-1.5 shadow-lg" role="menu">
             <button
               role="menuitem"
               onClick={() => {
@@ -141,6 +146,30 @@ function PortalHeader({ youth }) {
             >
               <KeyRound className="h-4 w-4" /> Password settings
             </button>
+            {canUpdateBank && (
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setBankModalOpen(true);
+                  menu.setOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"
+              >
+                <Landmark className="h-4 w-4" /> Update bank details
+              </button>
+            )}
+            {canUpdateDelivery && (
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setDeliveryModalOpen(true);
+                  menu.setOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"
+              >
+                <Truck className="h-4 w-4" /> Update delivery details
+              </button>
+            )}
             <div className="my-1 border-t" />
             <button
               role="menuitem"
@@ -156,6 +185,16 @@ function PortalHeader({ youth }) {
       <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Password settings">
         <PasswordSettings />
       </Modal>
+      {canUpdateBank && (
+        <Modal open={bankModalOpen} onClose={() => setBankModalOpen(false)} title="Update bank details">
+          <BankDetailsForm youth={youth} />
+        </Modal>
+      )}
+      {canUpdateDelivery && (
+        <Modal open={deliveryModalOpen} onClose={() => setDeliveryModalOpen(false)} title="Update delivery details">
+          <DeliveryPreferenceForm youth={youth} />
+        </Modal>
+      )}
     </div>
   );
 }
@@ -209,43 +248,63 @@ function BankDetailsForm({ youth }) {
   };
 
   return (
+    <div>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Needed to receive any funding or equipment allowance. These go straight to the programme's finance team.
+      </p>
+      <form onSubmit={submit} className="space-y-4" noValidate>
+        <Field label="Bank" required error={errors.bank_code}>
+          <Select value={form.bank_code} onChange={set("bank_code")}>
+            <option value="">Select your bank…</option>
+            {NIGERIAN_BANKS.map((b) => <option key={b.code} value={b.code}>{b.name}</option>)}
+          </Select>
+        </Field>
+        <Field label="Account number" required error={errors.account_number} hint="10 digits, no spaces">
+          <Input inputMode="numeric" maxLength={10} value={form.account_number} onChange={set("account_number")} placeholder="0123456789" />
+        </Field>
+        <Field label="Account name" required error={errors.account_name}>
+          <Input value={form.account_name} onChange={set("account_name")} placeholder="As it appears on your bank account" />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Next of kin name">
+            <Input value={form.next_of_kin_name} onChange={set("next_of_kin_name")} />
+          </Field>
+          <Field label="Next of kin phone">
+            <Input type="tel" value={form.next_of_kin_phone} onChange={set("next_of_kin_phone")} placeholder="+234…" />
+          </Field>
+        </div>
+        {errors._root && <p className="text-sm font-medium text-destructive">{errors._root}</p>}
+        {saved && !save.isPending && (
+          <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Saved.
+          </p>
+        )}
+        <Button type="submit" className="w-full" loading={save.isPending}>
+          <Landmark className="h-4 w-4" /> {existing ? "Update banking details" : "Save banking details"}
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+function BankDetailsSummary({ bank }) {
+  return (
     <Card>
       <CardHeader><CardTitle>Banking details</CardTitle></CardHeader>
-      <CardContent>
-        <p className="mb-3 text-xs text-muted-foreground">
-          Needed to receive any funding or equipment allowance. These go straight to the programme's finance team.
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <InfoRow icon={Landmark} label="Bank" value={bank.bank_name} />
+        <InfoRow icon={Landmark} label="Account number" value={bank.account_number} />
+        <InfoRow icon={Landmark} label="Account name" value={bank.account_name} />
+        {(bank.next_of_kin_name || bank.next_of_kin_phone) && (
+          <InfoRow
+            icon={Phone}
+            label="Next of kin"
+            value={[bank.next_of_kin_name, bank.next_of_kin_phone].filter(Boolean).join(" — ")}
+          />
+        )}
+        <p className="text-[11px] text-muted-foreground sm:col-span-2">
+          To change these, use "Update bank details" from the profile menu.
         </p>
-        <form onSubmit={submit} className="space-y-4" noValidate>
-          <Field label="Bank" required error={errors.bank_code}>
-            <Select value={form.bank_code} onChange={set("bank_code")}>
-              <option value="">Select your bank…</option>
-              {NIGERIAN_BANKS.map((b) => <option key={b.code} value={b.code}>{b.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="Account number" required error={errors.account_number} hint="10 digits, no spaces">
-            <Input inputMode="numeric" maxLength={10} value={form.account_number} onChange={set("account_number")} placeholder="0123456789" />
-          </Field>
-          <Field label="Account name" required error={errors.account_name}>
-            <Input value={form.account_name} onChange={set("account_name")} placeholder="As it appears on your bank account" />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Next of kin name">
-              <Input value={form.next_of_kin_name} onChange={set("next_of_kin_name")} />
-            </Field>
-            <Field label="Next of kin phone">
-              <Input type="tel" value={form.next_of_kin_phone} onChange={set("next_of_kin_phone")} placeholder="+234…" />
-            </Field>
-          </div>
-          {errors._root && <p className="text-sm font-medium text-destructive">{errors._root}</p>}
-          {saved && !save.isPending && (
-            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Saved.
-            </p>
-          )}
-          <Button type="submit" className="w-full" loading={save.isPending}>
-            <Landmark className="h-4 w-4" /> {existing ? "Update banking details" : "Save banking details"}
-          </Button>
-        </form>
       </CardContent>
     </Card>
   );
@@ -280,58 +339,70 @@ function DeliveryPreferenceForm({ youth }) {
   };
 
   return (
-    <Card>
-      <CardHeader><CardTitle>How should we get this to you?</CardTitle></CardHeader>
-      <CardContent>
-        <form onSubmit={submit} className="space-y-4" noValidate>
-          <div className="space-y-2">
-            {Object.entries(DELIVERY_METHOD_LABELS).map(([key, label]) => (
-              <label
-                key={key}
-                className={cn(
-                  "flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm hover:bg-muted/50",
-                  method === key && "border-primary bg-primary/5"
+    <div>
+      <form onSubmit={submit} className="space-y-4" noValidate>
+        <div className="space-y-2">
+          {Object.entries(DELIVERY_METHOD_LABELS).map(([key, label]) => (
+            <label
+              key={key}
+              className={cn(
+                "flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm hover:bg-muted/50",
+                method === key && "border-primary bg-primary/5"
+              )}
+            >
+              <input
+                type="radio"
+                name="delivery_method"
+                className="mt-0.5 h-4 w-4 accent-[hsl(152,65%,22%)]"
+                checked={method === key}
+                onChange={() => {
+                  setMethod(key);
+                  setSaved(false);
+                }}
+              />
+              <span>
+                {label}
+                {key === "home_address" && youth.address && (
+                  <span className="block text-xs text-muted-foreground">{youth.address}</span>
                 )}
-              >
-                <input
-                  type="radio"
-                  name="delivery_method"
-                  className="mt-0.5 h-4 w-4 accent-[hsl(152,65%,22%)]"
-                  checked={method === key}
-                  onChange={() => {
-                    setMethod(key);
-                    setSaved(false);
-                  }}
-                />
-                <span>
-                  {label}
-                  {key === "home_address" && youth.address && (
-                    <span className="block text-xs text-muted-foreground">{youth.address}</span>
-                  )}
-                  {key === "pickup_centre" && (
-                    <span className="block text-xs text-muted-foreground">
-                      We'll notify you when it's ready for collection at your local ADOZA empowerment centre.
-                    </span>
-                  )}
-                </span>
-              </label>
-            ))}
-          </div>
-          {method === "custom_address" && (
-            <Field label="Delivery address" required error={error}>
-              <Textarea rows={2} value={address} onChange={(e) => { setAddress(e.target.value); setSaved(false); }} />
-            </Field>
-          )}
-          {method !== "custom_address" && error && <p className="text-sm font-medium text-destructive">{error}</p>}
-          {saved && !save.isPending && (
-            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Saved.
-            </p>
-          )}
-          <Button type="submit" className="w-full" loading={save.isPending}>
-            <Truck className="h-4 w-4" /> {existing ? "Update preference" : "Save preference"}
-          </Button>
-        </form>
+                {key === "pickup_centre" && (
+                  <span className="block text-xs text-muted-foreground">
+                    We'll notify you when it's ready for collection at your local ADOZA empowerment centre.
+                  </span>
+                )}
+              </span>
+            </label>
+          ))}
+        </div>
+        {method === "custom_address" && (
+          <Field label="Delivery address" required error={error}>
+            <Textarea rows={2} value={address} onChange={(e) => { setAddress(e.target.value); setSaved(false); }} />
+          </Field>
+        )}
+        {method !== "custom_address" && error && <p className="text-sm font-medium text-destructive">{error}</p>}
+        {saved && !save.isPending && (
+          <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Saved.
+          </p>
+        )}
+        <Button type="submit" className="w-full" loading={save.isPending}>
+          <Truck className="h-4 w-4" /> {existing ? "Update preference" : "Save preference"}
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+function DeliveryPreferenceSummary({ preference }) {
+  return (
+    <Card>
+      <CardHeader><CardTitle>Delivery preference</CardTitle></CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <InfoRow icon={Truck} label="Method" value={DELIVERY_METHOD_LABELS[preference.method] ?? preference.method} />
+        {preference.address && <InfoRow icon={MapPin} label="Address" value={preference.address} />}
+        <p className="text-[11px] text-muted-foreground sm:col-span-2">
+          To change this, use "Update delivery details" from the profile menu.
+        </p>
       </CardContent>
     </Card>
   );
@@ -472,8 +543,30 @@ function StatusView({ youth }) {
 
       <RegistrationSummaryCard youth={youth} />
 
-      {showBankForm && <BankDetailsForm youth={youth} />}
-      {showDelivery && <DeliveryPreferenceForm youth={youth} />}
+      {showBankForm &&
+        (youth.youth_bank_details ? (
+          <BankDetailsSummary bank={youth.youth_bank_details} />
+        ) : (
+          <Card>
+            <CardHeader><CardTitle>Banking details</CardTitle></CardHeader>
+            <CardContent>
+              <BankDetailsForm youth={youth} />
+            </CardContent>
+          </Card>
+        ))}
+
+      {showDelivery &&
+        (youth.youth_delivery_preferences ? (
+          <DeliveryPreferenceSummary preference={youth.youth_delivery_preferences} />
+        ) : (
+          <Card>
+            <CardHeader><CardTitle>How should we get this to you?</CardTitle></CardHeader>
+            <CardContent>
+              <DeliveryPreferenceForm youth={youth} />
+            </CardContent>
+          </Card>
+        ))}
+
       {showTraining && <TrainingInfoCard youth={youth} />}
     </div>
   );
