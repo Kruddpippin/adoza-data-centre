@@ -160,7 +160,11 @@ export default function YouthForm() {
           <CardHeader><CardTitle>Photo</CardTitle></CardHeader>
           <CardContent className="flex items-center gap-4">
             {form.photo_url ? (
-              <img src={form.photo_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
+              <img
+                src={form.photo_url}
+                alt={form.first_name ? `${form.first_name} ${form.last_name}` : "Candidate photo preview"}
+                className="h-16 w-16 rounded-lg object-cover"
+              />
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
                 <User className="h-6 w-6 text-muted-foreground" aria-hidden />

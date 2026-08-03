@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
-  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2, Camera, User,
+  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2, Camera, User, AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -59,11 +59,15 @@ function PortalHeader({ youth }) {
       <div ref={menu.ref} className="relative">
         <button
           onClick={() => menu.setOpen(!menu.open)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground hover:opacity-90"
+          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-[11px] font-semibold text-primary-foreground hover:opacity-90"
           aria-label="Profile menu"
           aria-expanded={menu.open}
         >
-          {initials || "U"}
+          {youth?.photo_url ? (
+            <img src={youth.photo_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initials || "U"
+          )}
         </button>
         {menu.open && (
           <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border bg-card p-1.5 shadow-lg" role="menu">
@@ -447,7 +451,14 @@ function StatusView({ youth }) {
   return (
     <div className="space-y-4">
       <Card className="p-5 text-center">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Welcome back</p>
+        {youth.photo_url && (
+          <img
+            src={youth.photo_url}
+            alt={`${youth.first_name} ${youth.last_name}`}
+            className="mx-auto h-20 w-20 rounded-full border-2 border-card object-cover shadow-sm"
+          />
+        )}
+        <p className={cn("text-xs font-medium uppercase tracking-wider text-muted-foreground", youth.photo_url ? "mt-3" : "")}>Welcome back</p>
         <h1 className="font-display mt-1 text-xl font-bold tracking-tight">{youth.first_name} {youth.last_name}</h1>
         <div className="mt-3 flex items-center justify-center gap-2">
           {meta && <Badge className={meta.cls}>{meta.label}</Badge>}
@@ -617,7 +628,11 @@ function SelfRegisterForm({ user }) {
         <CardHeader><CardTitle>Photo</CardTitle></CardHeader>
         <CardContent className="flex items-center gap-4">
           {form.photo_url ? (
-            <img src={form.photo_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
+            <img
+              src={form.photo_url}
+              alt={form.first_name ? `${form.first_name} ${form.last_name}` : "Your photo preview"}
+              className="h-16 w-16 rounded-lg object-cover"
+            />
           ) : (
             <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
               <User className="h-6 w-6 text-muted-foreground" aria-hidden />
@@ -803,8 +818,26 @@ function SelfRegisterForm({ user }) {
   );
 }
 
+function StaffEmailBlockedCard() {
+  const { signOut } = useAuth();
+  return (
+    <Card className="p-6 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10">
+        <AlertTriangle className="h-6 w-6 text-destructive" aria-hidden />
+      </div>
+      <p className="mt-3 text-sm font-semibold">This email is already a staff account</p>
+      <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+        Staff and candidates must use different email addresses. Sign out and register as a candidate using a different email.
+      </p>
+      <Button variant="outline" size="sm" className="mt-4" onClick={signOut}>
+        <LogOut className="h-4 w-4" /> Sign out
+      </Button>
+    </Card>
+  );
+}
+
 export default function YouthPortal() {
-  const { session, user, loading: authLoading } = useAuth();
+  const { session, user, profile, loading: authLoading, profileLoading } = useAuth();
   const { data: record, isLoading, isError, refetch } = useMyYouthRecord(user?.id);
   const claim = useClaimYouthRecord();
 
@@ -821,12 +854,14 @@ export default function YouthPortal() {
   return (
     <div className="mx-auto min-h-screen max-w-2xl p-4 lg:p-8">
       <PortalHeader youth={record} />
-      {isLoading ? (
+      {isLoading || profileLoading ? (
         <Spinner />
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : record ? (
         <StatusView youth={record} />
+      ) : profile ? (
+        <StaffEmailBlockedCard />
       ) : (
         <SelfRegisterForm user={user} />
       )}

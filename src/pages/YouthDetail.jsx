@@ -158,7 +158,7 @@ export default function YouthDetail() {
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {youth.photo_url && (
-              <img src={youth.photo_url} alt="" className="h-11 w-11 rounded-full object-cover" />
+              <img src={youth.photo_url} alt={`${youth.first_name} ${youth.last_name}`} className="h-11 w-11 rounded-full object-cover" />
             )}
             <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">
               {youth.first_name} {youth.last_name}

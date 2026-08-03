@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LogOut, Send, Clock, XCircle } from "lucide-react";
+import { LogOut, Send, Clock, XCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useMyStaffApplication, useSubmitStaffApplication } from "@/hooks/useData";
+import { useMyStaffApplication, useSubmitStaffApplication, useMyYouthRecord } from "@/hooks/useData";
 import { Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState } from "@/components/ui";
 import {
   APPLICABLE_ROLES, ROLE_LABELS, KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS,
@@ -61,6 +61,24 @@ function ApplicationStatus({ application }) {
     <Card className="p-6 text-center">
       <h1 className="font-display text-lg font-bold tracking-tight">Application approved</h1>
       <p className="mt-1 text-sm text-muted-foreground">Please sign out and sign back in to access your account.</p>
+    </Card>
+  );
+}
+
+function CandidateEmailBlockedCard() {
+  const { signOut } = useAuth();
+  return (
+    <Card className="p-6 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10">
+        <AlertTriangle className="h-6 w-6 text-destructive" aria-hidden />
+      </div>
+      <p className="mt-3 text-sm font-semibold">This email is already registered as a candidate</p>
+      <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+        Staff and candidates must use different email addresses. Sign out and apply for a staff role using a different email.
+      </p>
+      <Button variant="outline" size="sm" className="mt-4" onClick={signOut}>
+        <LogOut className="h-4 w-4" /> Sign out
+      </Button>
     </Card>
   );
 }
@@ -232,6 +250,7 @@ function ApplyForm({ user }) {
 export default function StaffApplication() {
   const { session, user, loading: authLoading } = useAuth();
   const { data: application, isLoading, isError, refetch } = useMyStaffApplication(user?.id);
+  const { data: youthRecord, isLoading: loadingYouth } = useMyYouthRecord(user?.id);
 
   if (authLoading) return <Spinner className="min-h-screen" />;
   if (!session) return <Navigate to="/login" replace />;
@@ -239,12 +258,14 @@ export default function StaffApplication() {
   return (
     <div className="mx-auto min-h-screen max-w-lg p-4 lg:p-8">
       <PortalHeader />
-      {isLoading ? (
+      {isLoading || loadingYouth ? (
         <Spinner />
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : application ? (
         <ApplicationStatus application={application} />
+      ) : youthRecord ? (
+        <CandidateEmailBlockedCard />
       ) : (
         <ApplyForm user={user} />
       )}
