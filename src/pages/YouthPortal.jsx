@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, Navigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
   Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck,
@@ -10,12 +10,29 @@ import {
   useMyYouthRecord, useClaimYouthRecord, useSaveYouth, useSkills, useSaveBankDetails, useSaveDeliveryPreference,
 } from "@/hooks/useData";
 import {
-  Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge,
+  Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge, Modal,
 } from "@/components/ui";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
-  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, formatDate, formatNaira, cn,
+  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, formatDate, formatNaira, initialsOf, cn,
 } from "@/lib/utils";
+
+function useDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return { open, setOpen, ref };
+}
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -61,38 +78,39 @@ function PasswordSettings() {
   };
 
   return (
-    <Card>
-      <CardHeader><CardTitle>Sign in with a password</CardTitle></CardHeader>
-      <CardContent>
-        <p className="mb-3 text-xs text-muted-foreground">
-          Set a password so you can sign in directly next time, instead of waiting for an email link.
-        </p>
-        <form onSubmit={submit} className="space-y-3" noValidate>
-          <Field label="New password" required error={error}>
-            <Input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" />
-          </Field>
-          <Field label="Confirm password" required>
-            <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••••" />
-          </Field>
-          {saved && (
-            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Password set. Use it next time you sign in.
-            </p>
-          )}
-          <Button type="submit" variant="outline" className="w-full" loading={loading}>
-            <KeyRound className="h-4 w-4" /> Save password
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Set a password so you can sign in directly next time, instead of waiting for an email link.
+      </p>
+      <form onSubmit={submit} className="space-y-3" noValidate>
+        <Field label="New password" required error={error}>
+          <Input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" />
+        </Field>
+        <Field label="Confirm password" required>
+          <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••••" />
+        </Field>
+        {saved && (
+          <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Password set. Use it next time you sign in.
+          </p>
+        )}
+        <Button type="submit" variant="outline" className="w-full" loading={loading}>
+          <KeyRound className="h-4 w-4" /> Save password
+        </Button>
+      </form>
+    </div>
   );
 }
 
 function PortalHeader({ youth }) {
-  const { signOut } = useAuth();
+  const { session, signOut } = useAuth();
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const menu = useDropdown();
+  const initials = initialsOf(youth ? `${youth.first_name} ${youth.last_name}` : "");
+
   return (
     <div className="mb-6 flex items-center justify-between">
-      <div className="flex items-center gap-2.5">
+      <Link to={session ? "/my-registration" : "/login"} className="flex items-center gap-2.5">
         <img src="/kogi-logo.png" alt="Kogi State Government" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
         <div>
           <p className="font-display text-sm font-bold tracking-tight">
@@ -100,10 +118,44 @@ function PortalHeader({ youth }) {
           </p>
           <p className="text-[11px] text-muted-foreground">Candidate Dashboard</p>
         </div>
+      </Link>
+
+      <div ref={menu.ref} className="relative">
+        <button
+          onClick={() => menu.setOpen(!menu.open)}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground hover:opacity-90"
+          aria-label="Profile menu"
+          aria-expanded={menu.open}
+        >
+          {initials || "U"}
+        </button>
+        {menu.open && (
+          <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border bg-card p-1.5 shadow-lg" role="menu">
+            <button
+              role="menuitem"
+              onClick={() => {
+                setPasswordModalOpen(true);
+                menu.setOpen(false);
+              }}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"
+            >
+              <KeyRound className="h-4 w-4" /> Password settings
+            </button>
+            <div className="my-1 border-t" />
+            <button
+              role="menuitem"
+              onClick={signOut}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-destructive hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" /> Sign out
+            </button>
+          </div>
+        )}
       </div>
-      <Button variant="outline" size="sm" onClick={signOut}>
-        <LogOut className="h-4 w-4" /> Sign out
-      </Button>
+
+      <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Password settings">
+        <PasswordSettings />
+      </Modal>
     </div>
   );
 }
@@ -305,16 +357,9 @@ function JourneyProgress({ youth }) {
   if (youth.verification_status === "rejected" || youth.verification_status === "flagged") return null;
 
   const steps = [
-    { label: "Registered", done: true },
-    { label: "Verified by the programme team", done: youth.verification_status === "verified" },
-    { label: "Approved as a beneficiary", done: youth.is_approved_beneficiary },
+    { label: "Verified", done: youth.verification_status === "verified" },
+    { label: "Approved beneficiary", done: youth.is_approved_beneficiary },
   ];
-  if (youth.needs_funding || youth.needs_equipment) {
-    steps.push({ label: "Delivery preference set", done: !!youth.youth_delivery_preferences });
-  }
-  if (youth.needs_training) {
-    steps.push({ label: "Training scheduled", done: !!youth.training_commencement_date });
-  }
 
   return (
     <Card>
@@ -430,8 +475,6 @@ function StatusView({ youth }) {
       {showBankForm && <BankDetailsForm youth={youth} />}
       {showDelivery && <DeliveryPreferenceForm youth={youth} />}
       {showTraining && <TrainingInfoCard youth={youth} />}
-
-      <PasswordSettings />
     </div>
   );
 }
