@@ -58,12 +58,9 @@ export default function Landing() {
 
       <main>
         <section className="bg-gradient-to-br from-primary/5 via-background to-accent/5 px-4 py-16 text-center sm:py-24">
-          <p className="animate-fade-up text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-muted-foreground">
             SYB Door-to-Door Candidate Empowerment — Kogi State
           </p>
-          <h1 className="font-display animate-fade-up stagger-1 mt-3 text-4xl font-extrabold tracking-tight text-primary sm:text-5xl lg:text-6xl">
-            ADOZA 2026 — Batch A
-          </h1>
           <p className="animate-fade-up stagger-2 mt-4 text-base text-muted-foreground sm:text-lg">
             Registration is now open
           </p>
@@ -77,11 +74,11 @@ export default function Landing() {
         <section className="mx-auto max-w-3xl px-4 pb-16 sm:pb-24">
           <div className="animate-fade-up stagger-2 rounded-xl border bg-card p-6 shadow-sm sm:p-10">
             <h2 className="font-display text-xl font-bold tracking-tight text-primary underline decoration-2 underline-offset-4 sm:text-2xl">
-              ADOZA Registration Invitation
+              Registration Invitation
             </h2>
             <p className="mt-4 text-sm text-foreground sm:text-base">
               All qualified Adoza youths are invited to register for the{" "}
-              <strong className="font-semibold">2026 ADOZA Empowerment Programme — Batch A</strong>.
+              <strong className="font-semibold">2026 ADOZA Empowerment Programme</strong>.
             </p>
             <ul className="mt-5 space-y-3">
               {REQUIREMENTS.map((r) => (
