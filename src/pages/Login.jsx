@@ -287,7 +287,7 @@ export default function Login() {
   const location = useLocation();
   const [mode, setMode] = useState("youth");
   const [staffView, setStaffView] = useState("signin");
-  const [youthView, setYouthView] = useState("signin");
+  const [youthView, setYouthView] = useState(location.state?.intent === "register" ? "register" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

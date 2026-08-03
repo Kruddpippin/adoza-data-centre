@@ -6,6 +6,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Spinner } from "@/components/ui";
 import { ADMIN_ROLES } from "@/lib/utils";
 
+const Landing = lazy(() => import("@/pages/Landing"));
 const Login = lazy(() => import("@/pages/Login"));
 const YouthPortal = lazy(() => import("@/pages/YouthPortal"));
 const StaffApplication = lazy(() => import("@/pages/StaffApplication"));
@@ -28,6 +29,7 @@ export default function App() {
     <ErrorBoundary>
       <Suspense fallback={<Spinner className="min-h-screen" />}>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/my-registration" element={<YouthPortal />} />
           <Route path="/staff-application" element={<StaffApplication />} />
