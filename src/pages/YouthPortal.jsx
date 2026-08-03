@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
-  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck,
+  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -473,6 +473,8 @@ function RegistrationSummaryCard({ youth }) {
           value={`${EMPLOYMENT_LABELS[youth.employment_status] ?? "—"}${youth.occupation ? ` — ${youth.occupation}` : ""}`}
         />
         <InfoRow icon={Briefcase} label="Monthly income" value={formatNaira(youth.monthly_income)} />
+        <InfoRow icon={Briefcase} label="Business" value={youth.business_name} />
+        <InfoRow icon={ShieldCheck} label="Government ID" value={youth.government_id} />
         <InfoRow icon={ShieldCheck} label="Consent" value={youth.consent_given ? `Given ${formatDate(youth.consent_date)}` : "Not given"} />
         <div className="sm:col-span-2">
           <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">What you told us you need</p>
@@ -575,7 +577,8 @@ function StatusView({ youth }) {
 const EMPTY = {
   first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
   email: "", address: "", ward: "", lga: "", occupation: "", highest_education: "Secondary",
-  employment_status: "unemployed", monthly_income: "", needs_training: false,
+  employment_status: "unemployed", monthly_income: "", business_name: "", business_address: "",
+  government_id: "", latitude: "", longitude: "", needs_training: false,
   needs_equipment: false, needs_funding: false, consent_given: false,
 };
 
@@ -583,8 +586,9 @@ function SelfRegisterForm({ user }) {
   const { data: skillsCatalogue = [] } = useSkills();
   const save = useSaveYouth();
   const [form, setForm] = useState({ ...EMPTY, email: user?.email ?? "" });
-  const [skillId, setSkillId] = useState("");
+  const [skillRows, setSkillRows] = useState([]);
   const [errors, setErrors] = useState({});
+  const [gpsStatus, setGpsStatus] = useState("");
 
   const set = (key) => (e) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
@@ -597,6 +601,26 @@ function SelfRegisterForm({ user }) {
   };
 
   const wardOptions = KOGI_WARDS_BY_LGA[form.lga] ?? [];
+
+  const captureGps = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus("Geolocation not supported on this device.");
+      return;
+    }
+    setGpsStatus("Locating…");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({
+          ...f,
+          latitude: pos.coords.latitude.toFixed(6),
+          longitude: pos.coords.longitude.toFixed(6),
+        }));
+        setGpsStatus(`Captured (±${Math.round(pos.coords.accuracy)}m)`);
+      },
+      () => setGpsStatus("Could not get location — check permissions."),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const validate = () => {
     const e = {};
@@ -618,9 +642,15 @@ function SelfRegisterForm({ user }) {
       await save.mutateAsync({
         ...form,
         auth_user_id: user.id,
+        occupation: form.occupation || null,
+        business_name: form.business_name || null,
+        business_address: form.business_address || null,
+        government_id: form.government_id || null,
         monthly_income: form.monthly_income === "" ? null : Number(form.monthly_income),
+        latitude: form.latitude === "" ? null : Number(form.latitude),
+        longitude: form.longitude === "" ? null : Number(form.longitude),
         consent_date: new Date().toISOString(),
-        skills: skillId ? [{ skill_id: skillId, is_primary: true }] : [],
+        skills: skillRows.filter((s) => s.skill_id),
       });
     } catch (err) {
       setErrors((prev) => ({ ...prev, _root: err.message }));
@@ -630,7 +660,7 @@ function SelfRegisterForm({ user }) {
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
       <Card>
-        <CardHeader><CardTitle>Complete your registration</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Personal details</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field label="First name" required error={errors.first_name}>
             <Input value={form.first_name} onChange={set("first_name")} />
@@ -654,12 +684,25 @@ function SelfRegisterForm({ user }) {
           <Field label="Email">
             <Input type="email" value={form.email} onChange={set("email")} disabled />
           </Field>
+          <Field label="Government ID (NIN / voter card)">
+            <Input value={form.government_id} onChange={set("government_id")} />
+          </Field>
+          <Field label="Highest education">
+            <Select value={form.highest_education} onChange={set("highest_education")}>
+              {EDUCATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </Select>
+          </Field>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle>Location</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Field label="Home address">
+              <Textarea rows={2} value={form.address} onChange={set("address")} />
+            </Field>
+          </div>
           <Field label="LGA" required error={errors.lga}>
             <Select value={form.lga} onChange={setLga}>
               <option value="">Select LGA…</option>
@@ -672,36 +715,85 @@ function SelfRegisterForm({ user }) {
               {wardOptions.map((w) => <option key={w} value={w}>{w}</option>)}
             </Select>
           </Field>
-          <div className="sm:col-span-2">
-            <Field label="Home address">
-              <Input value={form.address} onChange={set("address")} />
-            </Field>
+          <Field label="Latitude">
+            <Input value={form.latitude} onChange={set("latitude")} inputMode="decimal" />
+          </Field>
+          <Field label="Longitude">
+            <Input value={form.longitude} onChange={set("longitude")} inputMode="decimal" />
+          </Field>
+          <div className="flex items-center gap-3 sm:col-span-2">
+            <Button type="button" variant="outline" size="sm" onClick={captureGps}>
+              <MapPin className="h-4 w-4" /> Capture GPS
+            </Button>
+            {gpsStatus && <p className="text-xs text-muted-foreground">{gpsStatus}</p>}
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Employment & skills</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Employment & business</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field label="Employment status" required>
             <Select value={form.employment_status} onChange={set("employment_status")}>
               {Object.entries(EMPLOYMENT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </Select>
           </Field>
-          <Field label="Highest education">
-            <Select value={form.highest_education} onChange={set("highest_education")}>
-              {EDUCATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-            </Select>
-          </Field>
           <Field label="Occupation">
             <Input value={form.occupation} onChange={set("occupation")} />
           </Field>
-          <Field label="Your main skill">
-            <Select value={skillId} onChange={(e) => setSkillId(e.target.value)}>
-              <option value="">Select a skill…</option>
-              {skillsCatalogue.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
+          <Field label="Monthly income (NGN)">
+            <Input type="number" min="0" value={form.monthly_income} onChange={set("monthly_income")} />
           </Field>
+          <Field label="Business name">
+            <Input value={form.business_name} onChange={set("business_name")} />
+          </Field>
+          <div className="sm:col-span-2">
+            <Field label="Business address">
+              <Input value={form.business_address} onChange={set("business_address")} />
+            </Field>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Skills</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {skillRows.map((row, i) => (
+            <div key={i} className="grid gap-2 sm:grid-cols-[1fr_110px_140px_44px]">
+              <Select
+                value={row.skill_id ?? ""}
+                onChange={(e) => setSkillRows((rows) => rows.map((r, j) => (j === i ? { ...r, skill_id: e.target.value } : r)))}
+                aria-label="Skill"
+              >
+                <option value="">Select skill…</option>
+                {skillsCatalogue.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </Select>
+              <Input
+                type="number" min="0" max="50" placeholder="Years"
+                value={row.years_of_experience}
+                onChange={(e) => setSkillRows((rows) => rows.map((r, j) => (j === i ? { ...r, years_of_experience: e.target.value } : r)))}
+                aria-label="Years of experience"
+              />
+              <Select
+                value={row.proficiency}
+                onChange={(e) => setSkillRows((rows) => rows.map((r, j) => (j === i ? { ...r, proficiency: e.target.value } : r)))}
+                aria-label="Proficiency"
+              >
+                <option value="">Proficiency…</option>
+                {["beginner", "intermediate", "advanced", "expert"].map((p) => (
+                  <option key={p} value={p}>{p[0].toUpperCase() + p.slice(1)}</option>
+                ))}
+              </Select>
+              <Button type="button" variant="ghost" size="icon" aria-label="Remove skill"
+                onClick={() => setSkillRows((rows) => rows.filter((_, j) => j !== i))}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm"
+            onClick={() => setSkillRows((rows) => [...rows, { skill_id: "", years_of_experience: "", proficiency: "", is_primary: rows.length === 0 }])}>
+            <Plus className="h-4 w-4" /> Add skill
+          </Button>
         </CardContent>
       </Card>
 
