@@ -7,14 +7,20 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Separate from `loading` (initial bootstrap only) — tracks profile fetches that happen
+  // later too, e.g. right after a fresh sign-in, so callers can wait for `profile` to be
+  // trustworthy before deciding "is this a staff account or a candidate" for redirects.
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
       setProfile(null);
       return;
     }
+    setProfileLoading(true);
     const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
     setProfile(data ?? null);
+    setProfileLoading(false);
   }, []);
 
   useEffect(() => {
@@ -51,6 +57,7 @@ export function AuthProvider({ children }) {
         profile,
         role: profile?.role ?? null,
         loading,
+        profileLoading,
         signIn,
         signOut,
       }}

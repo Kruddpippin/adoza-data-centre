@@ -44,7 +44,9 @@ function YouthPasswordSignIn() {
       setError(err.message === "Invalid login credentials" ? "Incorrect email or password." : err.message);
       return;
     }
-    navigate(location.state?.from?.pathname ?? "/dashboard", { replace: true });
+    // This form only ever appears under the candidate tab, so it always goes to the
+    // candidate portal — never the staff dashboard.
+    navigate(location.state?.from?.pathname ?? "/my-registration", { replace: true });
   };
 
   return (
@@ -280,10 +282,10 @@ function StaffApply() {
 }
 
 export default function Login() {
-  const { session, signIn, loading: authLoading } = useAuth();
+  const { session, profile, signIn, loading: authLoading, profileLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mode, setMode] = useState("staff");
+  const [mode, setMode] = useState("youth");
   const [staffView, setStaffView] = useState("signin");
   const [youthView, setYouthView] = useState("signin");
   const [email, setEmail] = useState("");
@@ -293,8 +295,10 @@ export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  if (!authLoading && session) {
-    return <Navigate to={location.state?.from?.pathname ?? "/dashboard"} replace />;
+  if (!authLoading && !profileLoading && session) {
+    // Staff accounts have a `profiles` row; candidates never do (by design — see
+    // handle_new_user). Route each to their own home instead of always assuming staff.
+    return <Navigate to={location.state?.from?.pathname ?? (profile ? "/dashboard" : "/my-registration")} replace />;
   }
 
   const submit = async (e) => {
@@ -354,16 +358,6 @@ export default function Login() {
         <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border bg-card p-1">
           <button
             type="button"
-            onClick={() => setMode("staff")}
-            className={cn(
-              "rounded-lg py-1.5 text-sm font-medium transition-colors",
-              mode === "staff" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Staff login
-          </button>
-          <button
-            type="button"
             onClick={() => setMode("youth")}
             className={cn(
               "rounded-lg py-1.5 text-sm font-medium transition-colors",
@@ -371,6 +365,16 @@ export default function Login() {
             )}
           >
             Candidate sign in / register
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("staff")}
+            className={cn(
+              "rounded-lg py-1.5 text-sm font-medium transition-colors",
+              mode === "staff" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Staff login
           </button>
         </div>
 
