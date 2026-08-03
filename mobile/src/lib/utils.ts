@@ -64,6 +64,12 @@ export const EMPLOYMENT_LABELS: Record<string, string> = {
 
 export const EDUCATION_LEVELS = ["None", "Primary", "Secondary", "Tertiary", "Postgraduate"];
 
+export const DELIVERY_METHOD_LABELS: Record<string, string> = {
+  home_address: "Deliver to home address",
+  custom_address: "Deliver to a different address",
+  pickup_centre: "Pick up at the empowerment centre",
+};
+
 export const KOGI_LGAS = [
   "Adavi", "Ajaokuta", "Ankpa", "Bassa", "Dekina", "Ibaji", "Idah",
   "Igalamela-Odolu", "Ijumu", "Kabba/Bunu", "Kogi", "Lokoja", "Mopa-Muro",

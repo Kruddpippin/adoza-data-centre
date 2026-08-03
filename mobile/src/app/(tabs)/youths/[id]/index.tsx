@@ -1,14 +1,79 @@
 import { useState } from "react";
-import { Image, Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { useAuth } from "@/context/AuthContext";
 import { useUpdateYouth, useYouth } from "@/hooks/useData";
 import { Badge, Button, Card, ErrorState, Field, Input, Spinner } from "@/components/ui";
-import { EMPLOYMENT_LABELS, formatDate, formatDateTime, formatNaira, isAdminRole, VERIFICATION_META, type VerificationStatus } from "@/lib/utils";
+import {
+  DELIVERY_METHOD_LABELS, EMPLOYMENT_LABELS, formatDate, formatDateTime, formatNaira, isAdminRole,
+  VERIFICATION_META, type VerificationStatus,
+} from "@/lib/utils";
 
 type ModalKind = "reject" | "flag" | "deny" | null;
+
+function TrainingCard({ youth, canEdit }: { youth: any; canEdit: boolean }) {
+  const update = useUpdateYouth();
+  const [date, setDate] = useState<string>(youth.training_commencement_date ?? "");
+  const [venue, setVenue] = useState<string>(youth.training_venue ?? "");
+  const [notes, setNotes] = useState<string>(youth.training_notes ?? "");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  if (!canEdit) {
+    return (
+      <Card className="gap-2">
+        <Text className="text-sm font-bold text-foreground">Training commencement</Text>
+        <InfoRow icon="calendar-outline" label="Date" value={formatDate(youth.training_commencement_date)} />
+        <InfoRow icon="location-outline" label="Venue" value={youth.training_venue} />
+        {youth.training_notes ? <Text className="text-sm text-muted-foreground">{youth.training_notes}</Text> : null}
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="gap-3">
+      <Text className="text-sm font-bold text-foreground">Training commencement</Text>
+      <Field label="Commencement date">
+        <Pressable onPress={() => setShowDatePicker(true)} className="h-11 justify-center rounded-lg border border-input bg-card px-3">
+          <Text className={`text-sm ${date ? "text-foreground" : "text-muted-foreground"}`}>{date || "Select date…"}</Text>
+        </Pressable>
+        {showDatePicker && (
+          <DateTimePicker
+            value={date ? new Date(date) : new Date()}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(_event, selected) => {
+              setShowDatePicker(Platform.OS === "ios");
+              if (selected) setDate(selected.toISOString().slice(0, 10));
+            }}
+          />
+        )}
+      </Field>
+      <Field label="Venue">
+        <Input value={venue} onChangeText={setVenue} placeholder="e.g. Lokoja Skills Acquisition Centre" />
+      </Field>
+      <Field label="Notes">
+        <Input value={notes} onChangeText={setNotes} multiline numberOfLines={2} className="h-20 pt-2" />
+      </Field>
+      <Button
+        className="h-9 self-start px-3"
+        loading={update.isPending}
+        onPress={() =>
+          update.mutateAsync({
+            id: youth.id,
+            training_commencement_date: date || null,
+            training_venue: venue || null,
+            training_notes: notes || null,
+          })
+        }
+      >
+        Save training details
+      </Button>
+    </Card>
+  );
+}
 
 function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value?: string | null }) {
   return (
@@ -172,6 +237,52 @@ export default function YouthDetail() {
             <Text className="text-sm text-muted-foreground">No skills recorded.</Text>
           )}
         </Card>
+
+        {youth.verification_status === "verified" && canApproveBeneficiary && (
+          <Card className="gap-2">
+            <Text className="text-sm font-bold text-foreground">Banking details</Text>
+            {youth.youth_bank_details ? (
+              <>
+                <InfoRow icon="business-outline" label="Bank" value={youth.youth_bank_details.bank_name} />
+                <InfoRow icon="card-outline" label="Account number" value={youth.youth_bank_details.account_number} />
+                <InfoRow icon="person-outline" label="Account name" value={youth.youth_bank_details.account_name} />
+                {(youth.youth_bank_details.next_of_kin_name || youth.youth_bank_details.next_of_kin_phone) && (
+                  <InfoRow
+                    icon="people-outline"
+                    label="Next of kin"
+                    value={[youth.youth_bank_details.next_of_kin_name, youth.youth_bank_details.next_of_kin_phone].filter(Boolean).join(" — ")}
+                  />
+                )}
+              </>
+            ) : (
+              <Text className="text-sm text-muted-foreground">Not submitted yet.</Text>
+            )}
+          </Card>
+        )}
+
+        {youth.is_approved_beneficiary && (youth.needs_funding || youth.needs_equipment) && (
+          <Card className="gap-2">
+            <Text className="text-sm font-bold text-foreground">Delivery preference</Text>
+            {youth.youth_delivery_preferences ? (
+              <>
+                <InfoRow
+                  icon="cube-outline"
+                  label="Method"
+                  value={DELIVERY_METHOD_LABELS[youth.youth_delivery_preferences.method] ?? youth.youth_delivery_preferences.method}
+                />
+                {youth.youth_delivery_preferences.address ? (
+                  <InfoRow icon="location-outline" label="Address" value={youth.youth_delivery_preferences.address} />
+                ) : null}
+              </>
+            ) : (
+              <Text className="text-sm text-muted-foreground">Not chosen yet.</Text>
+            )}
+          </Card>
+        )}
+
+        {youth.is_approved_beneficiary && youth.needs_training && (
+          <TrainingCard youth={youth} canEdit={canApproveBeneficiary} />
+        )}
 
         <Card className="items-center gap-2 p-5">
           <Text className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Eligibility score</Text>

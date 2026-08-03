@@ -46,7 +46,7 @@ export function useYouth(id?: string) {
         supabase
           .from("youths")
           .select(
-            "*, created_by_profile:profiles!youths_created_by_fkey(name), verified_by_profile:profiles!youths_verified_by_fkey(name), youth_skills(id, years_of_experience, proficiency, is_primary, skill:skills(id, name, category))"
+            "*, created_by_profile:profiles!youths_created_by_fkey(name), verified_by_profile:profiles!youths_verified_by_fkey(name), youth_skills(id, years_of_experience, proficiency, is_primary, skill:skills(id, name, category)), youth_bank_details(*), youth_delivery_preferences(*)"
           )
           .eq("id", id)
           .single()

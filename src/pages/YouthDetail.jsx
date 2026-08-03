@@ -2,12 +2,100 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Pencil, BadgeCheck, XCircle, Flag, Award, MapPin, Phone, Mail,
-  GraduationCap, Briefcase, Wrench, ShieldCheck,
+  GraduationCap, Briefcase, Wrench, ShieldCheck, Landmark, Truck, CalendarClock,
 } from "lucide-react";
 import { useYouth, useUpdateYouth } from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
-import { Button, Card, CardHeader, CardTitle, CardContent, Badge, Spinner, ErrorState, Modal, Textarea, Field } from "@/components/ui";
-import { VERIFICATION_META, EMPLOYMENT_LABELS, ageFrom, formatDate, formatDateTime, formatNaira, isAdminRole, cn } from "@/lib/utils";
+import { Button, Card, CardHeader, CardTitle, CardContent, Badge, Spinner, ErrorState, Modal, Textarea, Field, Input } from "@/components/ui";
+import { VERIFICATION_META, EMPLOYMENT_LABELS, DELIVERY_METHOD_LABELS, ageFrom, formatDate, formatDateTime, formatNaira, isAdminRole, cn } from "@/lib/utils";
+
+function BankDetailsCard({ bank }) {
+  return (
+    <Card className="animate-fade-up">
+      <CardHeader><CardTitle>Banking details</CardTitle></CardHeader>
+      <CardContent>
+        {bank ? (
+          <div className="space-y-2 text-sm">
+            <InfoRow icon={Landmark} label="Bank" value={bank.bank_name} />
+            <InfoRow icon={Landmark} label="Account number" value={bank.account_number} />
+            <InfoRow icon={Landmark} label="Account name" value={bank.account_name} />
+            {(bank.next_of_kin_name || bank.next_of_kin_phone) && (
+              <InfoRow icon={Phone} label="Next of kin" value={[bank.next_of_kin_name, bank.next_of_kin_phone].filter(Boolean).join(" — ")} />
+            )}
+            <p className="text-[11px] text-muted-foreground">Submitted {formatDateTime(bank.submitted_at)}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Not submitted yet.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DeliveryPreferenceCard({ preference }) {
+  return (
+    <Card className="animate-fade-up">
+      <CardHeader><CardTitle>Delivery preference</CardTitle></CardHeader>
+      <CardContent>
+        {preference ? (
+          <div className="space-y-2 text-sm">
+            <InfoRow icon={Truck} label="Method" value={DELIVERY_METHOD_LABELS[preference.method] ?? preference.method} />
+            {preference.address && <InfoRow icon={MapPin} label="Address" value={preference.address} />}
+            <p className="text-[11px] text-muted-foreground">Submitted {formatDateTime(preference.submitted_at)}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Not chosen yet.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TrainingDetailsCard({ youth, canEdit }) {
+  const update = useUpdateYouth();
+  const [form, setForm] = useState({
+    training_commencement_date: youth.training_commencement_date ?? "",
+    training_venue: youth.training_venue ?? "",
+    training_notes: youth.training_notes ?? "",
+  });
+
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const save = () => update.mutateAsync({ id: youth.id, ...form });
+
+  if (!canEdit) {
+    return (
+      <Card className="animate-fade-up">
+        <CardHeader><CardTitle>Training commencement</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <InfoRow icon={CalendarClock} label="Date" value={formatDate(youth.training_commencement_date)} />
+          <InfoRow icon={MapPin} label="Venue" value={youth.training_venue} />
+          {youth.training_notes && <p className="text-muted-foreground">{youth.training_notes}</p>}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="animate-fade-up">
+      <CardHeader><CardTitle>Training commencement</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <Field label="Commencement date">
+          <Input type="date" value={form.training_commencement_date ?? ""} onChange={set("training_commencement_date")} />
+        </Field>
+        <Field label="Venue">
+          <Input value={form.training_venue} onChange={set("training_venue")} placeholder="e.g. Lokoja Skills Acquisition Centre" />
+        </Field>
+        <Field label="Notes">
+          <Textarea rows={2} value={form.training_notes} onChange={set("training_notes")} />
+        </Field>
+        <Button size="sm" onClick={save} loading={update.isPending}>
+          <CalendarClock className="h-4 w-4" /> Save training details
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -174,6 +262,18 @@ export default function YouthDetail() {
               )}
             </CardContent>
           </Card>
+
+          {youth.verification_status === "verified" && canApproveBeneficiary && (
+            <BankDetailsCard bank={youth.youth_bank_details} />
+          )}
+
+          {youth.is_approved_beneficiary && (youth.needs_funding || youth.needs_equipment) && (
+            <DeliveryPreferenceCard preference={youth.youth_delivery_preferences} />
+          )}
+
+          {youth.is_approved_beneficiary && youth.needs_training && (
+            <TrainingDetailsCard youth={youth} canEdit={canApproveBeneficiary} />
+          )}
         </div>
 
         {/* Right: score + geo */}

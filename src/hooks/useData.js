@@ -36,7 +36,7 @@ export function useYouth(id) {
         supabase
           .from("youths")
           .select(
-            "*, created_by_profile:profiles!youths_created_by_fkey(name), verified_by_profile:profiles!youths_verified_by_fkey(name), youth_skills(id, years_of_experience, proficiency, is_primary, skill:skills(id, name, category))"
+            "*, created_by_profile:profiles!youths_created_by_fkey(name), verified_by_profile:profiles!youths_verified_by_fkey(name), youth_skills(id, years_of_experience, proficiency, is_primary, skill:skills(id, name, category)), youth_bank_details(*), youth_delivery_preferences(*)"
           )
           .eq("id", id)
           .single()
@@ -55,7 +55,9 @@ export function useMyYouthRecord(userId) {
       run(
         supabase
           .from("youths")
-          .select("*, youth_skills(id, years_of_experience, proficiency, is_primary, skill:skills(id, name, category))")
+          .select(
+            "*, youth_skills(id, years_of_experience, proficiency, is_primary, skill:skills(id, name, category)), youth_bank_details(*), youth_delivery_preferences(*)"
+          )
           .order("created_at", { ascending: true })
           .limit(1)
           .maybeSingle()
@@ -68,6 +70,36 @@ export function useClaimYouthRecord() {
   return useMutation({
     mutationFn: ({ id, userId }) =>
       run(supabase.from("youths").update({ auth_user_id: userId }).eq("id", id).select().single()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-youth-record"] }),
+  });
+}
+
+export function useSaveBankDetails() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (values) =>
+      run(
+        supabase
+          .from("youth_bank_details")
+          .upsert({ ...values, updated_at: new Date().toISOString() }, { onConflict: "youth_id" })
+          .select()
+          .single()
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-youth-record"] }),
+  });
+}
+
+export function useSaveDeliveryPreference() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (values) =>
+      run(
+        supabase
+          .from("youth_delivery_preferences")
+          .upsert({ ...values, updated_at: new Date().toISOString() }, { onConflict: "youth_id" })
+          .select()
+          .single()
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-youth-record"] }),
   });
 }

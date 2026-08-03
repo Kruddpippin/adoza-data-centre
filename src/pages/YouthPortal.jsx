@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LogOut, Wrench, KeyRound, CheckCircle2 } from "lucide-react";
+import { LogOut, Wrench, KeyRound, CheckCircle2, Landmark, Truck, CalendarClock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
-  useMyYouthRecord, useClaimYouthRecord, useSaveYouth, useSkills,
+  useMyYouthRecord, useClaimYouthRecord, useSaveYouth, useSkills, useSaveBankDetails, useSaveDeliveryPreference,
 } from "@/hooks/useData";
 import {
-  Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge,
+  Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge,
 } from "@/components/ui";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
+  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, formatDate, cn,
 } from "@/lib/utils";
 
 function PasswordSettings() {
@@ -92,8 +93,204 @@ function PortalHeader({ youth }) {
   );
 }
 
+function BankDetailsForm({ youth }) {
+  const existing = youth.youth_bank_details;
+  const save = useSaveBankDetails();
+  const [form, setForm] = useState({
+    bank_code: existing?.bank_code ?? "",
+    account_number: existing?.account_number ?? "",
+    account_name: existing?.account_name ?? "",
+    next_of_kin_name: existing?.next_of_kin_name ?? "",
+    next_of_kin_phone: existing?.next_of_kin_phone ?? "",
+  });
+  const [errors, setErrors] = useState({});
+  const [saved, setSaved] = useState(false);
+
+  const set = (key) => (e) => {
+    setSaved(false);
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.bank_code) e.bank_code = "Select your bank";
+    if (!isValidNuban(form.account_number)) e.account_number = "Enter a valid 10-digit account number";
+    if (!form.account_name.trim()) e.account_name = "Required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaved(false);
+    if (!validate()) return;
+    const bank = NIGERIAN_BANKS.find((b) => b.code === form.bank_code);
+    try {
+      await save.mutateAsync({
+        youth_id: youth.id,
+        bank_code: form.bank_code,
+        bank_name: bank?.name ?? "",
+        account_number: form.account_number.trim(),
+        account_name: form.account_name.trim(),
+        next_of_kin_name: form.next_of_kin_name.trim() || null,
+        next_of_kin_phone: form.next_of_kin_phone.trim() || null,
+      });
+      setSaved(true);
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, _root: err.message }));
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Banking details</CardTitle></CardHeader>
+      <CardContent>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Needed to receive any funding or equipment allowance. These go straight to the programme's finance team.
+        </p>
+        <form onSubmit={submit} className="space-y-4" noValidate>
+          <Field label="Bank" required error={errors.bank_code}>
+            <Select value={form.bank_code} onChange={set("bank_code")}>
+              <option value="">Select your bank…</option>
+              {NIGERIAN_BANKS.map((b) => <option key={b.code} value={b.code}>{b.name}</option>)}
+            </Select>
+          </Field>
+          <Field label="Account number" required error={errors.account_number} hint="10 digits, no spaces">
+            <Input inputMode="numeric" maxLength={10} value={form.account_number} onChange={set("account_number")} placeholder="0123456789" />
+          </Field>
+          <Field label="Account name" required error={errors.account_name}>
+            <Input value={form.account_name} onChange={set("account_name")} placeholder="As it appears on your bank account" />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Next of kin name">
+              <Input value={form.next_of_kin_name} onChange={set("next_of_kin_name")} />
+            </Field>
+            <Field label="Next of kin phone">
+              <Input type="tel" value={form.next_of_kin_phone} onChange={set("next_of_kin_phone")} placeholder="+234…" />
+            </Field>
+          </div>
+          {errors._root && <p className="text-sm font-medium text-destructive">{errors._root}</p>}
+          {saved && !save.isPending && (
+            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Saved.
+            </p>
+          )}
+          <Button type="submit" className="w-full" loading={save.isPending}>
+            <Landmark className="h-4 w-4" /> {existing ? "Update banking details" : "Save banking details"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DeliveryPreferenceForm({ youth }) {
+  const existing = youth.youth_delivery_preferences;
+  const save = useSaveDeliveryPreference();
+  const [method, setMethod] = useState(existing?.method ?? "home_address");
+  const [address, setAddress] = useState(existing?.address ?? "");
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSaved(false);
+    if (method === "custom_address" && !address.trim()) {
+      setError("Enter the delivery address");
+      return;
+    }
+    try {
+      await save.mutateAsync({
+        youth_id: youth.id,
+        method,
+        address: method === "custom_address" ? address.trim() : null,
+      });
+      setSaved(true);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>How should we get this to you?</CardTitle></CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-4" noValidate>
+          <div className="space-y-2">
+            {Object.entries(DELIVERY_METHOD_LABELS).map(([key, label]) => (
+              <label
+                key={key}
+                className={cn(
+                  "flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm hover:bg-muted/50",
+                  method === key && "border-primary bg-primary/5"
+                )}
+              >
+                <input
+                  type="radio"
+                  name="delivery_method"
+                  className="mt-0.5 h-4 w-4 accent-[hsl(152,65%,22%)]"
+                  checked={method === key}
+                  onChange={() => {
+                    setMethod(key);
+                    setSaved(false);
+                  }}
+                />
+                <span>
+                  {label}
+                  {key === "home_address" && youth.address && (
+                    <span className="block text-xs text-muted-foreground">{youth.address}</span>
+                  )}
+                  {key === "pickup_centre" && (
+                    <span className="block text-xs text-muted-foreground">
+                      We'll notify you when it's ready for collection at your local ADOZA empowerment centre.
+                    </span>
+                  )}
+                </span>
+              </label>
+            ))}
+          </div>
+          {method === "custom_address" && (
+            <Field label="Delivery address" required error={error}>
+              <Textarea rows={2} value={address} onChange={(e) => { setAddress(e.target.value); setSaved(false); }} />
+            </Field>
+          )}
+          {method !== "custom_address" && error && <p className="text-sm font-medium text-destructive">{error}</p>}
+          {saved && !save.isPending && (
+            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Saved.
+            </p>
+          )}
+          <Button type="submit" className="w-full" loading={save.isPending}>
+            <Truck className="h-4 w-4" /> {existing ? "Update preference" : "Save preference"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TrainingInfoCard({ youth }) {
+  return (
+    <Card className="border-accent/30 bg-accent/5">
+      <CardHeader><CardTitle>Training commencement</CardTitle></CardHeader>
+      <CardContent className="space-y-1.5 text-sm">
+        <p className="flex items-center gap-2">
+          <CalendarClock className="h-4 w-4 text-accent-foreground" aria-hidden />
+          {youth.training_commencement_date ? formatDate(youth.training_commencement_date) : "Date to be announced"}
+        </p>
+        <p className="text-muted-foreground">{youth.training_venue || "Venue to be announced"}</p>
+        {youth.training_notes && <p className="text-xs text-muted-foreground">{youth.training_notes}</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
 function StatusView({ youth }) {
   const meta = VERIFICATION_META[youth.verification_status];
+  const showBankForm = youth.verification_status === "verified";
+  const showDelivery = youth.is_approved_beneficiary && (youth.needs_funding || youth.needs_equipment);
+  const showTraining = youth.is_approved_beneficiary && youth.needs_training;
 
   return (
     <div className="space-y-4">
@@ -106,7 +303,7 @@ function StatusView({ youth }) {
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
           {youth.verification_status === "verified"
-            ? "Your registration has been verified by the programme team."
+            ? "Your registration has been verified by the programme team. You can now submit your banking details below."
             : youth.verification_status === "rejected"
               ? "Your registration could not be verified."
               : youth.verification_status === "flagged"
@@ -123,6 +320,10 @@ function StatusView({ youth }) {
           </CardContent>
         </Card>
       )}
+
+      {showBankForm && <BankDetailsForm youth={youth} />}
+      {showDelivery && <DeliveryPreferenceForm youth={youth} />}
+      {showTraining && <TrainingInfoCard youth={youth} />}
 
       <PasswordSettings />
     </div>
