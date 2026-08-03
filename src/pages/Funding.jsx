@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Banknote, Plus, Pencil } from "lucide-react";
 import { useFunding, useSaveFunding, useYouths } from "@/hooks/useData";
-import { Button, Input, Select, Textarea, Field, Badge, Spinner, ErrorState, EmptyState, Table, Th, Td, Modal, StatCard } from "@/components/ui";
+import { Button, Input, Select, Textarea, Field, Badge, ErrorState, EmptyState, Table, Th, Td, Modal, StatCard, TableSkeleton } from "@/components/ui";
 import { FUNDING_META, formatNaira, formatDate } from "@/lib/utils";
 
 const EMPTY = { beneficiary_id: "", amount_approved: "", bank_name: "", account_number: "", status: "pending", notes: "" };
@@ -70,7 +70,7 @@ export default function Funding() {
       </div>
 
       {isLoading ? (
-        <Spinner />
+        <TableSkeleton columns={6} />
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : !rows?.length ? (

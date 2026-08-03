@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Award, Download } from "lucide-react";
 import { useYouths } from "@/hooks/useData";
-import { Button, Badge, Spinner, ErrorState, EmptyState, Table, Th, Td } from "@/components/ui";
+import { Button, Badge, ErrorState, EmptyState, Table, Th, Td, TableSkeleton } from "@/components/ui";
 import { formatDate, ageFrom, EMPLOYMENT_LABELS, exportCsv } from "@/lib/utils";
 
 export default function Beneficiaries() {
@@ -35,7 +35,7 @@ export default function Beneficiaries() {
       </div>
 
       {isLoading ? (
-        <Spinner />
+        <TableSkeleton columns={6} />
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : !youths?.length ? (

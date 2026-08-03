@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Search, Users, Download } from "lucide-react";
 import { useYouths } from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
-import { Button, Input, Select, Badge, Spinner, ErrorState, EmptyState, Table, Th, Td } from "@/components/ui";
+import { Button, Input, Select, Badge, ErrorState, EmptyState, Table, Th, Td, TableSkeleton } from "@/components/ui";
 import { VERIFICATION_META, EMPLOYMENT_LABELS, KOGI_LGAS, ageFrom, formatDate, exportCsv, isAdminRole } from "@/lib/utils";
 
 export default function Youths() {
@@ -82,7 +82,7 @@ export default function Youths() {
       </div>
 
       {isLoading ? (
-        <Spinner />
+        <TableSkeleton columns={7} />
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : !youths?.length ? (

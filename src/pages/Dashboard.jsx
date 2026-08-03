@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import { useDashboardData } from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
-import { StatCard, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge, Button } from "@/components/ui";
+import { StatCard, Card, CardHeader, CardTitle, CardContent, ErrorState, Badge, Button, StatCardSkeleton, Skeleton } from "@/components/ui";
 import { formatNaira, VERIFICATION_META, EMPLOYMENT_LABELS } from "@/lib/utils";
 
 const PIE_COLORS = ["#f59e0b", "#059669", "#ef4444", "#f97316"];
@@ -51,7 +51,23 @@ export default function Dashboard() {
     return { total: youths.length, verified: verified.length, pending: pending.length, beneficiaries: beneficiaries.length, disbursed, assignedEquipment, byLga, byStatus, byEmployment, recent };
   }, [data]);
 
-  if (isLoading) return <Spinner />;
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-6 w-56" />
+          <Skeleton className="mt-2 h-4 w-72" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6 lg:gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <StatCardSkeleton key={i} />)}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-2"><CardContent><Skeleton className="h-64 w-full" /></CardContent></Card>
+          <Card><CardContent><Skeleton className="h-64 w-full" /></CardContent></Card>
+        </div>
+      </div>
+    );
+  }
   if (isError || !stats) return <ErrorState onRetry={refetch} />;
 
   return (

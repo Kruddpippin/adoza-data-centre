@@ -163,6 +163,48 @@ export function Spinner({ className }) {
   );
 }
 
+/* ---------------- Skeletons ---------------- */
+export function Skeleton({ className }) {
+  return <div className={cn("animate-pulse rounded-md bg-muted", className)} aria-hidden />;
+}
+
+export function StatCardSkeleton({ className }) {
+  return (
+    <Card className={cn("p-5", className)}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-2.5">
+          <Skeleton className="h-3 w-2/3" />
+          <Skeleton className="h-7 w-1/2" />
+        </div>
+        <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+      </div>
+    </Card>
+  );
+}
+
+export function TableSkeleton({ columns = 5, rows = 6, className }) {
+  return (
+    <div className={cn("overflow-hidden rounded-xl border bg-card", className)} role="status" aria-label="Loading">
+      <div className="border-b bg-muted/50 px-4 py-2.5">
+        <div className="flex gap-6">
+          {Array.from({ length: columns }).map((_, i) => (
+            <Skeleton key={i} className="h-3 flex-1" />
+          ))}
+        </div>
+      </div>
+      <div className="divide-y">
+        {Array.from({ length: rows }).map((_, r) => (
+          <div key={r} className="flex items-center gap-6 px-4 py-3.5">
+            {Array.from({ length: columns }).map((_, c) => (
+              <Skeleton key={c} className={cn("h-3.5 flex-1", c === 0 && "max-w-32")} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function EmptyState({ icon: Icon = Inbox, title, message, action }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">

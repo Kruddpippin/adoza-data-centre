@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Package, Plus, Pencil } from "lucide-react";
 import { useEquipment, useSaveEquipment, useYouths } from "@/hooks/useData";
-import { Button, Input, Select, Textarea, Field, Badge, Spinner, ErrorState, EmptyState, Table, Th, Td, Modal } from "@/components/ui";
+import { Button, Input, Select, Textarea, Field, Badge, ErrorState, EmptyState, Table, Th, Td, Modal, TableSkeleton } from "@/components/ui";
 import { EQUIPMENT_META, formatDate } from "@/lib/utils";
 
 const EMPTY = { name: "", serial_number: "", category: "General", status: "available", assigned_to: "", notes: "" };
@@ -56,7 +56,7 @@ export default function Equipment() {
       </div>
 
       {isLoading ? (
-        <Spinner />
+        <TableSkeleton columns={7} />
       ) : isError ? (
         <ErrorState onRetry={refetch} />
       ) : !items?.length ? (
