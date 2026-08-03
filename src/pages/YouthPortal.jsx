@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LogOut, Wrench, KeyRound, CheckCircle2, Landmark, Truck, CalendarClock } from "lucide-react";
+import {
+  LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
+  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
@@ -11,8 +14,20 @@ import {
 } from "@/components/ui";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
-  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, formatDate, cn,
+  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, formatDate, formatNaira, cn,
 } from "@/lib/utils";
+
+function InfoRow({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-sm">{value || "—"}</p>
+      </div>
+    </div>
+  );
+}
 
 function PasswordSettings() {
   const [password, setPassword] = useState("");
@@ -83,7 +98,7 @@ function PortalHeader({ youth }) {
           <p className="font-display text-sm font-bold tracking-tight">
             {youth ? `${youth.first_name} ${youth.last_name}` : "ADOZA Data Centre"}
           </p>
-          <p className="text-[11px] text-muted-foreground">Candidate self-service portal</p>
+          <p className="text-[11px] text-muted-foreground">Candidate Dashboard</p>
         </div>
       </div>
       <Button variant="outline" size="sm" onClick={signOut}>
@@ -286,6 +301,93 @@ function TrainingInfoCard({ youth }) {
   );
 }
 
+function JourneyProgress({ youth }) {
+  if (youth.verification_status === "rejected" || youth.verification_status === "flagged") return null;
+
+  const steps = [
+    { label: "Registered", done: true },
+    { label: "Verified by the programme team", done: youth.verification_status === "verified" },
+    { label: "Approved as a beneficiary", done: youth.is_approved_beneficiary },
+  ];
+  if (youth.needs_funding || youth.needs_equipment) {
+    steps.push({ label: "Delivery preference set", done: !!youth.youth_delivery_preferences });
+  }
+  if (youth.needs_training) {
+    steps.push({ label: "Training scheduled", done: !!youth.training_commencement_date });
+  }
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Your journey</CardTitle></CardHeader>
+      <CardContent>
+        <ol className="space-y-3">
+          {steps.map((step) => (
+            <li key={step.label} className="flex items-center gap-2.5">
+              {step.done ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+              ) : (
+                <Circle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              )}
+              <span className={cn("text-sm", step.done ? "font-medium" : "text-muted-foreground")}>{step.label}</span>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RegistrationSummaryCard({ youth }) {
+  const needs = [["Training", youth.needs_training], ["Equipment", youth.needs_equipment], ["Funding", youth.needs_funding]].filter(
+    ([, val]) => val
+  );
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Your registration details</CardTitle></CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <InfoRow icon={Phone} label="Phone" value={youth.phone} />
+        <InfoRow icon={Mail} label="Email" value={youth.email} />
+        <InfoRow icon={MapPin} label="Address" value={youth.address} />
+        <InfoRow icon={MapPin} label="Ward / LGA" value={`${youth.ward}, ${youth.lga}`} />
+        <InfoRow icon={GraduationCap} label="Education" value={youth.highest_education} />
+        <InfoRow
+          icon={Briefcase}
+          label="Employment"
+          value={`${EMPLOYMENT_LABELS[youth.employment_status] ?? "—"}${youth.occupation ? ` — ${youth.occupation}` : ""}`}
+        />
+        <InfoRow icon={Briefcase} label="Monthly income" value={formatNaira(youth.monthly_income)} />
+        <InfoRow icon={ShieldCheck} label="Consent" value={youth.consent_given ? `Given ${formatDate(youth.consent_date)}` : "Not given"} />
+        <div className="sm:col-span-2">
+          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">What you told us you need</p>
+          {needs.length ? (
+            <div className="flex flex-wrap gap-1.5">
+              {needs.map(([label]) => (
+                <Badge key={label} className="bg-accent/15 text-accent-foreground">{label}</Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">None selected.</p>
+          )}
+        </div>
+        {youth.youth_skills?.length > 0 && (
+          <div className="sm:col-span-2">
+            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Skills</p>
+            <div className="flex flex-wrap gap-1.5">
+              {youth.youth_skills.map((ys) => (
+                <Badge key={ys.id} className="bg-primary/10 text-primary">
+                  {ys.skill?.name}
+                  {ys.is_primary ? " · Primary" : ""}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function StatusView({ youth }) {
   const meta = VERIFICATION_META[youth.verification_status];
   const showBankForm = youth.verification_status === "verified";
@@ -312,6 +414,8 @@ function StatusView({ youth }) {
         </p>
       </Card>
 
+      <JourneyProgress youth={youth} />
+
       {youth.verification_notes && (
         <Card>
           <CardHeader><CardTitle>Note from the programme team</CardTitle></CardHeader>
@@ -320,6 +424,8 @@ function StatusView({ youth }) {
           </CardContent>
         </Card>
       )}
+
+      <RegistrationSummaryCard youth={youth} />
 
       {showBankForm && <BankDetailsForm youth={youth} />}
       {showDelivery && <DeliveryPreferenceForm youth={youth} />}
