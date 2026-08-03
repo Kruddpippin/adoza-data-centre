@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useSearchParams, Navigate } from "react-router-dom";
 import { LogIn, Eye, EyeOff, Mail, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -26,8 +26,6 @@ function GoogleIcon(props) {
 
 function YouthPasswordSignIn() {
   const { signIn } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -44,9 +42,8 @@ function YouthPasswordSignIn() {
       setError(err.message === "Invalid login credentials" ? "Incorrect email or password." : err.message);
       return;
     }
-    // This form only ever appears under the candidate tab, so it always goes to the
-    // candidate portal — never the staff dashboard.
-    navigate(location.state?.from?.pathname ?? "/my-registration", { replace: true });
+    // Success falls through to Login()'s own top-level redirect/enforcement logic,
+    // which verifies this account is actually a candidate before sending it anywhere.
   };
 
   return (
@@ -283,27 +280,49 @@ function StaffApply() {
 
 export default function Login() {
   const { session, profile, signIn, loading: authLoading, profileLoading } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
-  const [mode, setMode] = useState("youth");
+  const [searchParams] = useSearchParams();
+  // A staff Google sign-in does a full-page round trip through Google and back to
+  // /login, which remounts this component and loses the `mode` a plain click would
+  // have kept — so the staff Google button tags its redirect with ?portal=staff to
+  // survive that trip. Candidate is the default either way, so it needs no tag.
+  const [mode, setMode] = useState(searchParams.get("portal") === "staff" ? "staff" : "youth");
   const [staffView, setStaffView] = useState("signin");
   const [youthView, setYouthView] = useState(location.state?.intent === "register" ? "register" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [portalError, setPortalError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  if (!authLoading && !profileLoading && session) {
-    // Staff accounts have a `profiles` row; candidates never do (by design — see
-    // handle_new_user). Route each to their own home instead of always assuming staff.
+  const settled = !authLoading && !profileLoading && !!session;
+  // Staff accounts have a `profiles` row; candidates never do (by design — see
+  // handle_new_user). A session that doesn't match the tab it signed in from means
+  // someone used, say, candidate credentials on the staff tab — Supabase Auth itself
+  // has no concept of "portal," so it happily authenticates either way. Reject that
+  // combination outright instead of quietly routing them to the other portal.
+  const wrongPortal = settled && ((mode === "staff" && !profile) || (mode === "youth" && !!profile));
+
+  useEffect(() => {
+    if (!wrongPortal) return;
+    supabase.auth.signOut();
+    setPortalError(
+      mode === "staff"
+        ? "This email isn't registered as staff. Use the Candidate tab to sign in, or apply to join the team."
+        : "This email is a staff account. Use the Staff tab to sign in."
+    );
+  }, [wrongPortal, mode]);
+
+  if (settled && !wrongPortal) {
     return <Navigate to={location.state?.from?.pathname ?? (profile ? "/dashboard" : "/my-registration")} replace />;
   }
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+    setPortalError("");
     setLoading(true);
     const { error: err } = await signIn(email.trim(), password);
     setLoading(false);
@@ -311,15 +330,16 @@ export default function Login() {
       setError(err.message === "Invalid login credentials" ? "Incorrect email or password." : err.message);
       return;
     }
-    navigate(location.state?.from?.pathname ?? "/dashboard", { replace: true });
+    // Success falls through to the top-level redirect/enforcement logic above.
   };
 
   const continueWithGoogle = async () => {
     setError("");
+    setPortalError("");
     setGoogleLoading(true);
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/login` },
+      options: { redirectTo: `${window.location.origin}/login?portal=staff` },
     });
     if (err) {
       setError(err.message);
@@ -355,10 +375,16 @@ export default function Login() {
           </div>
         </div>
 
+        {portalError && (
+          <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center text-xs font-medium text-destructive">
+            {portalError}
+          </p>
+        )}
+
         <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border bg-card p-1">
           <button
             type="button"
-            onClick={() => setMode("youth")}
+            onClick={() => { setMode("youth"); setPortalError(""); }}
             className={cn(
               "rounded-lg py-1.5 text-sm font-medium transition-colors",
               mode === "youth" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
@@ -368,7 +394,7 @@ export default function Login() {
           </button>
           <button
             type="button"
-            onClick={() => setMode("staff")}
+            onClick={() => { setMode("staff"); setPortalError(""); }}
             className={cn(
               "rounded-lg py-1.5 text-sm font-medium transition-colors",
               mode === "staff" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
