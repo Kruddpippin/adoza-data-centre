@@ -5,7 +5,7 @@ const androidPackage = isPreview ? "ng.gov.kogi.adoza.datacentre.preview" : "ng.
 
 module.exports = {
   expo: {
-    name: isPreview ? "ADOZA Data Centre (Preview)" : "ADOZA Data Centre",
+    name: isPreview ? "TEST" : "ADOZA Data Centre",
     slug: "adoza-data-center-qtgth8",
     version: "1.0.0",
     orientation: "portrait",
