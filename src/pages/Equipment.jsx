@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Package, Plus, Pencil } from "lucide-react";
 import { useEquipment, useSaveEquipment, useYouths } from "@/hooks/useData";
 import { Button, Input, Select, Textarea, Field, Badge, ErrorState, EmptyState, Table, Th, Td, Modal, TableSkeleton } from "@/components/ui";
-import { EQUIPMENT_META, formatDate } from "@/lib/utils";
+import { EQUIPMENT_META, EQUIPMENT_CATEGORIES, formatDate } from "@/lib/utils";
 
 const EMPTY = { name: "", serial_number: "", category: "General", status: "available", assigned_to: "", notes: "" };
 
@@ -112,7 +112,9 @@ export default function Equipment() {
               <Input value={form.serial_number} onChange={(e) => setForm({ ...form, serial_number: e.target.value })} />
             </Field>
             <Field label="Category">
-              <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+              <Select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                {EQUIPMENT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </Select>
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">

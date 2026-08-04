@@ -67,6 +67,10 @@ export const EQUIPMENT_META = {
   damaged:   { label: "Damaged",   cls: "bg-orange-100 text-orange-700" },
 };
 
+export const EQUIPMENT_CATEGORIES = [
+  "General", "Agro", "Baking", "Beauty", "Business", "Electronics", "Solar", "Tailoring", "Welding",
+];
+
 export const FUNDING_META = {
   pending:   { label: "Pending",   cls: "bg-amber-100 text-amber-700" },
   approved:  { label: "Approved",  cls: "bg-blue-100 text-blue-700" },
