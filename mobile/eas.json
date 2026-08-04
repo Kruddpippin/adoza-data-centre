@@ -26,7 +26,6 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_SMT1bUFA2lOo9uOlMemdfA_LdWkxNWS",
         "APP_VARIANT": "production"
       },
-      "autoIncrement": true,
       "channel": "production"
     }
   },

@@ -26,7 +26,7 @@ module.exports = {
       },
       predictiveBackGestureEnabled: false,
       permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
-      versionCode: 2,
+      versionCode: 3,
     },
     web: {
       output: "single",
