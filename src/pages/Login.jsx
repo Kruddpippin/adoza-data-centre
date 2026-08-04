@@ -322,7 +322,9 @@ export default function Login() {
   // survive that trip. Candidate is the default either way, so it needs no tag.
   const [mode, setMode] = useState(searchParams.get("portal") === "staff" ? "staff" : "youth");
   const [staffView, setStaffView] = useState("signin");
-  const [youthView, setYouthView] = useState(location.state?.intent === "register" ? "register" : "signin");
+  // Sign in is always the first thing a candidate sees, even coming from a "Register"/
+  // "Apply Now" CTA elsewhere — they switch to Register themselves if they need to.
+  const [youthView, setYouthView] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

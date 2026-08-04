@@ -45,7 +45,7 @@ export default function Landing() {
 
           <nav className="hidden items-center gap-6 sm:flex" aria-label="Primary">
             <NavLink to="/" active>Home</NavLink>
-            <NavLink to="/login" state={{ intent: "register" }}>Apply</NavLink>
+            <NavLink to="/login">Apply</NavLink>
           </nav>
 
           <Link to="/login">
@@ -65,7 +65,7 @@ export default function Landing() {
             Registration is now open
           </p>
           <div className="animate-fade-up stagger-3 mt-4">
-            <Link to="/login" state={{ intent: "register" }}>
+            <Link to="/login">
               <Button size="lg">Apply Now</Button>
             </Link>
           </div>
@@ -88,7 +88,7 @@ export default function Landing() {
                 </li>
               ))}
             </ul>
-            <Link to="/login" state={{ intent: "register" }} className="mt-5 block sm:inline-block">
+            <Link to="/login" className="mt-5 block sm:inline-block">
               <Button size="lg" className="w-full sm:w-auto">Apply Now</Button>
             </Link>
           </div>
