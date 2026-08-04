@@ -1,7 +1,13 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
 const AuthContext = createContext(null);
+
+// Security requirement: any signed-in user is force-logged-out after 10 minutes
+// of no interaction, regardless of Supabase's own token auto-refresh.
+const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+const ACTIVITY_EVENTS = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "wheel"];
+const ACTIVITY_THROTTLE_MS = 1000;
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -48,6 +54,36 @@ export function AuthProvider({ children }) {
 
   const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });
   const signOut = () => supabase.auth.signOut();
+
+  // Force sign-out after 10 minutes of no mouse/keyboard/touch activity, independent
+  // of Supabase's own silent token refresh (which would otherwise keep an unattended
+  // session alive indefinitely).
+  const idleTimerRef = useRef(null);
+  useEffect(() => {
+    if (!session) {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      return;
+    }
+
+    let lastReset = 0;
+    const resetTimer = () => {
+      const now = Date.now();
+      if (now - lastReset < ACTIVITY_THROTTLE_MS) return;
+      lastReset = now;
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        supabase.auth.signOut();
+      }, IDLE_TIMEOUT_MS);
+    };
+
+    resetTimer();
+    ACTIVITY_EVENTS.forEach((evt) => window.addEventListener(evt, resetTimer, { passive: true }));
+
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      ACTIVITY_EVENTS.forEach((evt) => window.removeEventListener(evt, resetTimer));
+    };
+  }, [session]);
 
   return (
     <AuthContext.Provider
