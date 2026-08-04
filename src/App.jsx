@@ -4,7 +4,19 @@ import { Layout } from "@/components/Layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Spinner } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
 import { ADMIN_ROLES } from "@/lib/utils";
+
+// A truly unmatched URL (typo, stale bookmark) should land wherever this specific
+// visitor actually belongs, not unconditionally on the staff dashboard — a candidate
+// (or a signed-out visitor) hitting this fallback was landing on a page they'd
+// immediately get bounced out of again by ProtectedRoute.
+function NotFoundRedirect() {
+  const { session, profile, loading } = useAuth();
+  if (loading) return <Spinner className="min-h-screen" />;
+  if (!session) return <Navigate to="/" replace />;
+  return <Navigate to={profile ? "/dashboard" : "/my-registration"} replace />;
+}
 
 const Landing = lazy(() => import("@/pages/Landing"));
 const Login = lazy(() => import("@/pages/Login"));
@@ -99,7 +111,7 @@ export default function App() {
             />
           </Route>
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFoundRedirect />} />
         </Routes>
       </Suspense>
     </ErrorBoundary>
