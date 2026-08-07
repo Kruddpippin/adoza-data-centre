@@ -2,6 +2,10 @@ const APP_VARIANT = process.env.APP_VARIANT ?? "production";
 const isPreview = APP_VARIANT === "preview";
 
 const androidPackage = isPreview ? "ng.gov.kogi.adoza.datacentre.preview" : "ng.gov.kogi.adoza.datacentre";
+// Preview and production must use distinct schemes — with both apps installed on the
+// same device, a shared scheme makes Android unable to tell which app should receive
+// the Google OAuth redirect, so it silently fails for both.
+const scheme = isPreview ? "adozadatacentrepreview" : "adozadatacentre";
 
 module.exports = {
   expo: {
@@ -10,7 +14,7 @@ module.exports = {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "adozadatacentre",
+    scheme,
     userInterfaceStyle: "automatic",
     ios: {
       bundleIdentifier: androidPackage,
@@ -26,7 +30,7 @@ module.exports = {
       },
       predictiveBackGestureEnabled: false,
       permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
-      versionCode: 4,
+      versionCode: 5,
     },
     web: {
       output: "single",
