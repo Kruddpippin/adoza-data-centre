@@ -334,12 +334,25 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const settled = !authLoading && !profileLoading && !!session;
+  // A Google sign-in that lands here in "youth" mode (rather than "staff") almost
+  // always means the OAuth redirect lost the ?portal=staff tag somewhere along the
+  // way (e.g. a provider redirect fallback) rather than the user actually meaning to
+  // use the candidate tab — an authenticated staff account should never be bounced
+  // just because of that. Auto-correct instead of hard-erroring for this one case.
+  const isGoogleSession = session?.user?.app_metadata?.provider === "google";
+  const misroutedStaffGoogleSignIn = settled && mode === "youth" && !!profile && isGoogleSession;
+
+  useEffect(() => {
+    if (misroutedStaffGoogleSignIn) setMode("staff");
+  }, [misroutedStaffGoogleSignIn]);
+
   // Staff accounts have a `profiles` row; candidates never do (by design — see
   // handle_new_user). A session that doesn't match the tab it signed in from means
   // someone used, say, candidate credentials on the staff tab — Supabase Auth itself
   // has no concept of "portal," so it happily authenticates either way. Reject that
   // combination outright instead of quietly routing them to the other portal.
-  const wrongPortal = settled && ((mode === "staff" && !profile) || (mode === "youth" && !!profile));
+  const wrongPortal =
+    settled && !misroutedStaffGoogleSignIn && ((mode === "staff" && !profile) || (mode === "youth" && !!profile));
 
   useEffect(() => {
     if (!wrongPortal) return;
