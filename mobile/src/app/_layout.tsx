@@ -3,10 +3,11 @@ import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { Spinner } from "@/components/ui";
+import { Button, Spinner } from "@/components/ui";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,16 +16,26 @@ const queryClient = new QueryClient({
 });
 
 function RootNavigator() {
-  const { session, loading } = useAuth();
+  const { session, profile, profileError, loading, signOut } = useAuth();
 
   if (loading) return <Spinner />;
 
+  if (session && profileError) {
+    return (
+      <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
+        <Text className="text-center text-base font-semibold text-foreground">Couldn't load your profile</Text>
+        <Text className="text-center text-sm text-muted-foreground">{profileError}</Text>
+        <Button onPress={() => signOut()}>Sign out and try again</Button>
+      </View>
+    );
+  }
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!!session}>
+      <Stack.Protected guard={!!session && !!profile}>
         <Stack.Screen name="(tabs)" />
       </Stack.Protected>
-      <Stack.Protected guard={!session}>
+      <Stack.Protected guard={!session || !profile}>
         <Stack.Screen name="login" />
       </Stack.Protected>
     </Stack>

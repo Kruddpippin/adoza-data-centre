@@ -11,6 +11,7 @@ type AuthContextValue = {
   profile: Profile | null;
   role: Role | null;
   loading: boolean;
+  profileError: string | null;
   signIn: (email: string, password: string) => ReturnType<typeof supabase.auth.signInWithPassword>;
   signOut: () => ReturnType<typeof supabase.auth.signOut>;
 };
@@ -20,15 +21,24 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (userId?: string) => {
     if (!userId) {
       setProfile(null);
+      setProfileError(null);
       return;
     }
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    setProfile((data as Profile) ?? null);
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
+    if (error) {
+      console.error("Failed to load profile", error);
+      setProfile(null);
+      setProfileError(error.message);
+      return;
+    }
+    setProfile(data as Profile);
+    setProfileError(null);
   }, []);
 
   useEffect(() => {
@@ -67,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role: profile?.role ?? null,
         loading,
+        profileError,
         signIn,
         signOut,
       }}
