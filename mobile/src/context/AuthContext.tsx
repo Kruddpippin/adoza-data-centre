@@ -12,7 +12,9 @@ type AuthContextValue = {
   role: Role | null;
   loading: boolean;
   profileError: string | null;
-  profileErrorCode: string | null;
+  // No `profiles` row and no `youths` record either — a signed-in user this app has
+  // never seen before, most likely a new staff sign-up that needs to apply.
+  needsStaffApplication: boolean;
   signIn: (email: string, password: string) => ReturnType<typeof supabase.auth.signInWithPassword>;
   signOut: () => ReturnType<typeof supabase.auth.signOut>;
 };
@@ -23,33 +25,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileErrorCode, setProfileErrorCode] = useState<string | null>(null);
+  const [needsStaffApplication, setNeedsStaffApplication] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (userId?: string) => {
     if (!userId) {
       setProfile(null);
       setProfileError(null);
-      setProfileErrorCode(null);
+      setNeedsStaffApplication(false);
       return;
     }
     const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    if (error) {
-      console.error("Failed to load profile", error);
-      setProfile(null);
-      // PGRST116 = no row found — candidates never get a `profiles` row, so this
-      // means a candidate/beneficiary email tried to sign in to this staff-only app.
-      setProfileError(
-        error.code === "PGRST116"
-          ? "This app is for ADOZA staff only. Candidates should use the ADOZA website to check their registration."
-          : error.message
-      );
-      setProfileErrorCode(error.code ?? null);
+    if (!error) {
+      setProfile(data as Profile);
+      setProfileError(null);
+      setNeedsStaffApplication(false);
       return;
     }
-    setProfile(data as Profile);
-    setProfileError(null);
-    setProfileErrorCode(null);
+    if (error.code !== "PGRST116") {
+      // Real failure (network, RLS, etc.) — not simply "no profiles row yet".
+      console.error("Failed to load profile", error);
+      setProfile(null);
+      setProfileError(error.message);
+      setNeedsStaffApplication(false);
+      return;
+    }
+
+    // No `profiles` row. Candidates never get one either (by design), so this alone
+    // doesn't tell us who's signing in — check for a `youths` record to tell a
+    // candidate apart from a brand-new staff applicant.
+    setProfile(null);
+    const { data: youthRow, error: youthErr } = await supabase.from("youths").select("id").limit(1).maybeSingle();
+    if (youthErr) console.error("Failed to check candidate record", youthErr);
+    if (youthRow) {
+      setProfileError("This app is for ADOZA staff only. Candidates should use the ADOZA website to check their registration.");
+      setNeedsStaffApplication(false);
+    } else {
+      setProfileError(null);
+      setNeedsStaffApplication(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -89,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: profile?.role ?? null,
         loading,
         profileError,
-        profileErrorCode,
+        needsStaffApplication,
         signIn,
         signOut,
       }}

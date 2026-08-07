@@ -140,3 +140,21 @@ export function useDashboardData() {
     },
   });
 }
+
+/* ============ staff applications ============ */
+// RLS scopes this to the caller's own application row — no explicit filter needed.
+export function useMyStaffApplication(userId?: string) {
+  return useQuery({
+    queryKey: ["my-staff-application", userId],
+    enabled: !!userId,
+    queryFn: () => run(supabase.from("staff_applications").select("*").maybeSingle()),
+  });
+}
+
+export function useSubmitStaffApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (values: Record<string, any>) => run(supabase.from("staff_applications").insert(values).select().single()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-staff-application"] }),
+  });
+}

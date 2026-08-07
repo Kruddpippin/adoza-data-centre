@@ -46,6 +46,10 @@ export const ROLE_COLORS: Record<Role, [string, string]> = {
 export const ADMIN_ROLES: Role[] = ["super_admin", "campaign_admin"];
 export const isAdminRole = (r?: string | null) => !!r && (ADMIN_ROLES as string[]).includes(r);
 
+// Roles an applicant can self-select on the staff application form — admin roles
+// are granted manually, never through self-service application.
+export const APPLICABLE_ROLES: Role[] = ["field_agent", "validator", "enumerator"];
+
 export type VerificationStatus = "pending" | "verified" | "rejected" | "flagged";
 
 export const VERIFICATION_META: Record<VerificationStatus, { label: string; bg: string; fg: string }> = {

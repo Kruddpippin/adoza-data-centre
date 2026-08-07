@@ -167,6 +167,9 @@ export default function Login() {
           </View>
         </Card>
 
+        <Text className="text-center text-xs text-muted-foreground">
+          New staff? Sign in with Google above — you'll be taken straight to the application form.
+        </Text>
         <Text className="text-center text-[11px] text-muted-foreground">
           Authorised programme staff only. Activity is audited.
         </Text>

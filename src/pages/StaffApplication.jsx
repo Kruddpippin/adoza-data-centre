@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LogOut, Send, Clock, XCircle, AlertTriangle } from "lucide-react";
+import { LogOut, Send, Clock, XCircle, AlertTriangle, Camera, User, MapPin } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMyStaffApplication, useSubmitStaffApplication, useMyYouthRecord } from "@/hooks/useData";
+import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState } from "@/components/ui";
 import {
   APPLICABLE_ROLES, ROLE_LABELS, KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS,
@@ -84,9 +85,9 @@ function CandidateEmailBlockedCard() {
 }
 
 const EMPTY = {
-  first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
+  photo_url: "", first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
   address: "", ward: "", lga: "", occupation: "", highest_education: "Secondary",
-  employment_status: "unemployed", consent_given: false,
+  employment_status: "unemployed", latitude: "", longitude: "", consent_given: false,
 };
 
 function ApplyForm({ user }) {
@@ -94,6 +95,9 @@ function ApplyForm({ user }) {
   const [form, setForm] = useState(EMPTY);
   const [appliedRole, setAppliedRole] = useState("");
   const [errors, setErrors] = useState({});
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const [gpsStatus, setGpsStatus] = useState("");
 
   const set = (key) => (e) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
@@ -106,6 +110,45 @@ function ApplyForm({ user }) {
   };
 
   const wardOptions = KOGI_WARDS_BY_LGA[form.lga] ?? [];
+
+  const captureGps = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus("Geolocation not supported on this device.");
+      return;
+    }
+    setGpsStatus("Locating…");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({
+          ...f,
+          latitude: pos.coords.latitude.toFixed(6),
+          longitude: pos.coords.longitude.toFixed(6),
+        }));
+        setGpsStatus(`Captured (±${Math.round(pos.coords.accuracy)}m)`);
+      },
+      () => setGpsStatus("Could not get location — check permissions."),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError("");
+    setPhotoUploading(true);
+    try {
+      const path = `staff/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+      const { error } = await supabase.storage.from("youth-photos").upload(path, file, { contentType: file.type || "image/jpeg" });
+      if (error) throw error;
+      const { data } = supabase.storage.from("youth-photos").getPublicUrl(path);
+      setForm((f) => ({ ...f, photo_url: data.publicUrl }));
+    } catch (err) {
+      setPhotoError(err.message);
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   const validate = () => {
     const e = {};
@@ -130,6 +173,7 @@ function ApplyForm({ user }) {
         name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
         email: user.email,
         applied_role: appliedRole,
+        photo_url: form.photo_url || null,
         gender: form.gender,
         date_of_birth: form.date_of_birth,
         phone: form.phone,
@@ -139,6 +183,8 @@ function ApplyForm({ user }) {
         employment_status: form.employment_status,
         highest_education: form.highest_education,
         occupation: form.occupation,
+        latitude: form.latitude === "" ? null : Number(form.latitude),
+        longitude: form.longitude === "" ? null : Number(form.longitude),
         consent_given: form.consent_given,
         consent_date: new Date().toISOString(),
       });
@@ -149,6 +195,32 @@ function ApplyForm({ user }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <Card>
+        <CardHeader><CardTitle>Photo</CardTitle></CardHeader>
+        <CardContent className="flex items-center gap-4">
+          {form.photo_url ? (
+            <img
+              src={form.photo_url}
+              alt={form.first_name ? `${form.first_name} ${form.last_name}` : "Applicant photo preview"}
+              className="h-16 w-16 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
+              <User className="h-6 w-6 text-muted-foreground" aria-hidden />
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted">
+              <Camera className="h-4 w-4" />
+              {form.photo_url ? "Retake photo" : "Take / upload photo"}
+              <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} disabled={photoUploading} />
+            </label>
+            {photoUploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
+            {photoError && <p className="text-xs font-medium text-destructive">{photoError}</p>}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader><CardTitle>Personal details</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -196,6 +268,18 @@ function ApplyForm({ user }) {
             <Field label="Home address">
               <Input value={form.address} onChange={set("address")} />
             </Field>
+          </div>
+          <Field label="Latitude">
+            <Input value={form.latitude} onChange={set("latitude")} inputMode="decimal" />
+          </Field>
+          <Field label="Longitude">
+            <Input value={form.longitude} onChange={set("longitude")} inputMode="decimal" />
+          </Field>
+          <div className="flex items-center gap-3 sm:col-span-2">
+            <Button type="button" variant="outline" size="sm" onClick={captureGps}>
+              <MapPin className="h-4 w-4" /> Capture current location
+            </Button>
+            {gpsStatus && <p className="text-xs text-muted-foreground">{gpsStatus}</p>}
           </div>
         </CardContent>
       </Card>

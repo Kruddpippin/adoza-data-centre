@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserCog, Check, X } from "lucide-react";
+import { UserCog, Check, X, User as UserIcon, MapPin } from "lucide-react";
 import {
   useProfiles, useUpdateProfile, usePendingApplications, useApproveApplication, useRejectApplication,
 } from "@/hooks/useData";
@@ -43,11 +43,30 @@ function PendingApplications() {
         {error && <p className="text-sm font-medium text-destructive">{error}</p>}
         {applications.map((a) => (
           <div key={a.id} className="flex items-center justify-between rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">{a.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {a.email} · applying for <span className="font-medium">{ROLE_LABELS[a.applied_role]}</span> · {formatDate(a.created_at)}
-              </p>
+            <div className="flex items-center gap-3">
+              {a.photo_url ? (
+                <img src={a.photo_url} alt={a.name} className="h-10 w-10 rounded-lg object-cover" />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <UserIcon className="h-4 w-4 text-muted-foreground" aria-hidden />
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium">{a.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {a.email} · applying for <span className="font-medium">{ROLE_LABELS[a.applied_role]}</span> · {formatDate(a.created_at)}
+                </p>
+                {a.latitude != null && a.longitude != null && (
+                  <a
+                    href={`https://www.google.com/maps?q=${a.latitude},${a.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                  >
+                    <MapPin className="h-3 w-3" /> View location
+                  </a>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <Button
