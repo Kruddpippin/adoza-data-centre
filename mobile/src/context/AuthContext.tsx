@@ -12,6 +12,7 @@ type AuthContextValue = {
   role: Role | null;
   loading: boolean;
   profileError: string | null;
+  profileErrorCode: string | null;
   signIn: (email: string, password: string) => ReturnType<typeof supabase.auth.signInWithPassword>;
   signOut: () => ReturnType<typeof supabase.auth.signOut>;
 };
@@ -22,23 +23,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileErrorCode, setProfileErrorCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (userId?: string) => {
     if (!userId) {
       setProfile(null);
       setProfileError(null);
+      setProfileErrorCode(null);
       return;
     }
     const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
     if (error) {
       console.error("Failed to load profile", error);
       setProfile(null);
-      setProfileError(error.message);
+      // PGRST116 = no row found — candidates never get a `profiles` row, so this
+      // means a candidate/beneficiary email tried to sign in to this staff-only app.
+      setProfileError(
+        error.code === "PGRST116"
+          ? "This app is for ADOZA staff only. Candidates should use the ADOZA website to check their registration."
+          : error.message
+      );
+      setProfileErrorCode(error.code ?? null);
       return;
     }
     setProfile(data as Profile);
     setProfileError(null);
+    setProfileErrorCode(null);
   }, []);
 
   useEffect(() => {
@@ -78,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: profile?.role ?? null,
         loading,
         profileError,
+        profileErrorCode,
         signIn,
         signOut,
       }}

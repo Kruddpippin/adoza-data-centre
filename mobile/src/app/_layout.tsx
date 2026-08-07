@@ -16,16 +16,19 @@ const queryClient = new QueryClient({
 });
 
 function RootNavigator() {
-  const { session, profile, profileError, loading, signOut } = useAuth();
+  const { session, profile, profileError, profileErrorCode, loading, signOut } = useAuth();
 
   if (loading) return <Spinner />;
 
   if (session && profileError) {
+    const isNotStaff = profileErrorCode === "PGRST116";
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <Text className="text-center text-base font-semibold text-foreground">Couldn't load your profile</Text>
+        <Text className="text-center text-base font-semibold text-foreground">
+          {isNotStaff ? "Access restricted" : "Couldn't load your profile"}
+        </Text>
         <Text className="text-center text-sm text-muted-foreground">{profileError}</Text>
-        <Button onPress={() => signOut()}>Sign out and try again</Button>
+        <Button onPress={() => signOut()}>{isNotStaff ? "Sign out" : "Sign out and try again"}</Button>
       </View>
     );
   }
