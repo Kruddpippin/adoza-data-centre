@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui";
+import { Footer } from "@/components/Footer";
 import { cn } from "@/lib/utils";
 
 const REQUIREMENTS = [
@@ -29,7 +30,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b bg-card">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
-          <div className="flex min-w-0 items-center gap-2.5">
+          <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="ADOZA Data Centre home">
             <img
               src="/kogi-logo.png"
               alt="Kogi State Government"
@@ -41,15 +42,15 @@ export default function Landing() {
             <p className="font-display truncate text-sm font-bold tracking-tight sm:text-base">
               ADOZA Data Centre
             </p>
-          </div>
+          </Link>
 
           <nav className="hidden items-center gap-6 sm:flex" aria-label="Primary">
             <NavLink to="/" active>Home</NavLink>
-            <NavLink to="/login">Apply</NavLink>
+            <NavLink to="/login?portal=candidate">Apply</NavLink>
             <NavLink to="/login?portal=staff">Staff Login</NavLink>
           </nav>
 
-          <Link to="/login">
+          <Link to="/login?portal=candidate">
             <Button size="sm" className="rounded-full px-5">
               Check Status
             </Button>
@@ -66,7 +67,7 @@ export default function Landing() {
             Registration is now open
           </p>
           <div className="animate-fade-up stagger-3 mt-4">
-            <Link to="/login">
+            <Link to="/login?portal=candidate">
               <Button size="lg">Apply Now</Button>
             </Link>
           </div>
@@ -89,12 +90,14 @@ export default function Landing() {
                 </li>
               ))}
             </ul>
-            <Link to="/login" className="mt-5 block sm:inline-block">
+            <Link to="/login?portal=candidate" className="mt-5 block sm:inline-block">
               <Button size="lg" className="w-full sm:w-auto">Apply Now</Button>
             </Link>
           </div>
         </section>
       </main>
+
+      <Footer />
     </div>
   );
 }

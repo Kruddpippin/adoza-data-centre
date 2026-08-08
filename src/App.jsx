@@ -19,6 +19,9 @@ function NotFoundRedirect() {
 }
 
 const Landing = lazy(() => import("@/pages/Landing"));
+const About = lazy(() => import("@/pages/About"));
+const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const TermsOfConditions = lazy(() => import("@/pages/TermsOfConditions"));
 const Login = lazy(() => import("@/pages/Login"));
 const YouthPortal = lazy(() => import("@/pages/YouthPortal"));
 const StaffApplication = lazy(() => import("@/pages/StaffApplication"));
@@ -42,6 +45,9 @@ export default function App() {
       <Suspense fallback={<Spinner className="min-h-screen" />}>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-conditions" element={<TermsOfConditions />} />
           <Route path="/login" element={<Login />} />
           <Route path="/my-registration" element={<YouthPortal />} />
           <Route path="/staff-application" element={<StaffApplication />} />

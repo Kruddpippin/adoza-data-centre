@@ -40,7 +40,9 @@ export function Layout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login", { replace: true });
+    // This layout is staff-only — always return to the staff login, never the
+    // candidate one, regardless of which portal was last selected on the homepage.
+    navigate("/login?portal=staff", { replace: true });
   };
 
   return (

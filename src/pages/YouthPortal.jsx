@@ -912,7 +912,9 @@ export default function YouthPortal() {
   }, [record?.id, record?.auth_user_id, user?.id]);
 
   if (authLoading) return <Spinner className="min-h-screen" />;
-  if (!session) return <Navigate to="/login" replace />;
+  // This portal is candidate-only — a lost session (including "Sign out" above)
+  // returns to the candidate login, never the staff one.
+  if (!session) return <Navigate to="/login?portal=candidate" replace />;
 
   return (
     <div className="mx-auto min-h-screen max-w-2xl p-4 lg:p-8">

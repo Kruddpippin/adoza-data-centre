@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocation, useSearchParams, Navigate } from "react-router-dom";
+import { useLocation, useSearchParams, Navigate, Link } from "react-router-dom";
 import { LogIn, Eye, EyeOff, Mail, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button, Input, Field, Card } from "@/components/ui";
+import { getStoredPortal, setStoredPortal } from "@/lib/portal";
 
 const DEMO_ACCOUNTS = [
   { label: "Admin", email: "admin@adoza.ng" },
@@ -318,8 +319,20 @@ export default function Login() {
   // A staff Google sign-in does a full-page round trip through Google and back to
   // /login, which remounts this component and loses the `mode` a plain click would
   // have kept — so the staff Google button tags its redirect with ?portal=staff to
-  // survive that trip. Candidate is the default either way, so it needs no tag.
-  const [mode, setMode] = useState(searchParams.get("portal") === "staff" ? "staff" : "youth");
+  // survive that trip. When there's no explicit ?portal= tag at all (a sign-out
+  // redirect, a session timing out, a stale bookmark), fall back to whichever portal
+  // was last selected on the homepage rather than defaulting to candidate — a staff
+  // member should land back on the staff login, not get bounced to the candidate one.
+  const queryPortal = searchParams.get("portal");
+  const [mode, setMode] = useState(() => {
+    if (queryPortal === "staff") return "staff";
+    if (queryPortal === "candidate" || queryPortal === "youth") return "youth";
+    return getStoredPortal();
+  });
+
+  useEffect(() => {
+    setStoredPortal(mode);
+  }, [mode]);
   const [staffView, setStaffView] = useState("signin");
   // Sign in is always the first thing a candidate sees, even coming from a "Register"/
   // "Apply Now" CTA elsewhere — they switch to Register themselves if they need to.
@@ -406,15 +419,17 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
       <div className="w-full max-w-sm animate-fade-up">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <img
-            src="/kogi-logo.png"
-            alt="Kogi State Government"
-            width={56}
-            height={56}
-            fetchpriority="high"
-            decoding="async"
-            className="h-14 w-14 rounded-full object-cover shadow-lg"
-          />
+          <Link to="/" aria-label="ADOZA Data Centre home">
+            <img
+              src="/kogi-logo.png"
+              alt="Kogi State Government"
+              width={56}
+              height={56}
+              fetchpriority="high"
+              decoding="async"
+              className="h-14 w-14 rounded-full object-cover shadow-lg"
+            />
+          </Link>
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">ADOZA Data Centre</h1>
             <p className="mt-1 text-sm text-muted-foreground">

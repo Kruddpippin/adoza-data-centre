@@ -12,7 +12,9 @@ export function ProtectedRoute({ children, roles }) {
   const { data: application, isLoading: applicationLoading } = useMyStaffApplication(role ? null : user?.id);
 
   if (loading) return <Spinner className="min-h-screen" />;
-  if (!session) return <Navigate to="/login" replace state={{ from: location }} />;
+  // Every route behind ProtectedRoute is staff-only, so a lost/expired session always
+  // returns here to the staff login, never the candidate one.
+  if (!session) return <Navigate to="/login?portal=staff" replace state={{ from: location }} />;
   if (!role) {
     if (applicationLoading) return <Spinner className="min-h-screen" />;
     return <Navigate to={application ? "/staff-application" : "/my-registration"} replace />;

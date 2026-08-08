@@ -337,7 +337,9 @@ export default function StaffApplication() {
   const { data: youthRecord, isLoading: loadingYouth } = useMyYouthRecord(user?.id);
 
   if (authLoading) return <Spinner className="min-h-screen" />;
-  if (!session) return <Navigate to="/login" replace />;
+  // Applying to join the team is a staff flow — a lost session (including the "Sign
+  // out" buttons above) returns to the staff login, not the candidate one.
+  if (!session) return <Navigate to="/login?portal=staff" replace />;
 
   return (
     <div className="mx-auto min-h-screen max-w-lg p-4 lg:p-8">
