@@ -4,7 +4,6 @@ import { LogIn, Eye, EyeOff, Mail, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button, Input, Field, Card } from "@/components/ui";
-import { cn } from "@/lib/utils";
 
 const DEMO_ACCOUNTS = [
   { label: "Admin", email: "admin@adoza.ng" },
@@ -429,29 +428,6 @@ export default function Login() {
             {portalError}
           </p>
         )}
-
-        <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border bg-card p-1">
-          <button
-            type="button"
-            onClick={() => { setMode("youth"); setPortalError(""); }}
-            className={cn(
-              "rounded-lg py-1.5 text-sm font-medium transition-colors",
-              mode === "youth" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Candidate sign in / register
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode("staff"); setPortalError(""); }}
-            className={cn(
-              "rounded-lg py-1.5 text-sm font-medium transition-colors",
-              mode === "staff" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Staff login
-          </button>
-        </div>
 
         <Card className="p-6">
           {mode === "staff" ? (
