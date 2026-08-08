@@ -150,7 +150,7 @@ export function Layout() {
           </button>
           <p className="font-display text-sm font-bold lg:hidden">ADOZA Data Centre</p>
           <p className="hidden text-xs text-muted-foreground lg:block">
-            SYB Door-to-Door Candidate Empowerment Programme — Kogi State
+            SYB Door-to-Door Youth Empowerment Programme — Kogi State
           </p>
 
           <div className="ml-auto flex items-center gap-1">

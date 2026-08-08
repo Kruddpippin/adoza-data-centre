@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
         <h2 className="font-display text-lg font-semibold">1. Who this applies to</h2>
         <p className="mt-2">
           This policy covers everyone who uses the ADOZA Data Centre: candidates applying to or benefiting from
-          the SYB Door-to-Door Candidate Empowerment Programme, and programme staff (field agents, enumerators,
+          the SYB Door-to-Door Youth Empowerment Programme, and programme staff (field agents, enumerators,
           validators, the Benefits Committee and administrators) who operate it.
         </p>
       </section>

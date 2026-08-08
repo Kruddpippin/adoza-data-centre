@@ -61,7 +61,7 @@ export default function Landing() {
       <main>
         <section className="bg-gradient-to-br from-primary/5 via-background to-accent/5 px-4 py-6 text-center sm:py-8">
           <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            SYB Door-to-Door Candidate Empowerment — Kogi State
+            SYB Door-to-Door Youth Empowerment — Kogi Central
           </p>
           <p className="animate-fade-up stagger-2 mt-2 text-base text-muted-foreground sm:text-lg">
             Registration is now open

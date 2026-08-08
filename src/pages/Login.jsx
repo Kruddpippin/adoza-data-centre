@@ -433,7 +433,7 @@ export default function Login() {
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight">ADOZA Data Centre</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              SYB Door-to-Door Candidate Empowerment — Kogi State
+              SYB Door-to-Door Youth Empowerment — Kogi Central
             </p>
           </div>
         </div>

@@ -103,7 +103,7 @@ export default function Login() {
           <View className="items-center">
             <Text className="text-2xl font-bold tracking-tight text-foreground">ADOZA Data Centre</Text>
             <Text className="mt-1 text-center text-sm text-muted-foreground">
-              SYB Door-to-Door Candidate Empowerment — Kogi State
+              SYB Door-to-Door Youth Empowerment — Kogi Central
             </Text>
           </View>
         </View>
