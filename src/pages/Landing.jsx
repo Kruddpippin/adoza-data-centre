@@ -46,6 +46,7 @@ export default function Landing() {
           <nav className="hidden items-center gap-6 sm:flex" aria-label="Primary">
             <NavLink to="/" active>Home</NavLink>
             <NavLink to="/login">Apply</NavLink>
+            <NavLink to="/login?portal=staff">Staff Login</NavLink>
           </nav>
 
           <Link to="/login">
