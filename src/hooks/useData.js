@@ -15,7 +15,11 @@ export function useYouths(filters = {}) {
     queryFn: () => {
       let q = supabase
         .from("youths")
-        .select("*, created_by_profile:profiles!youths_created_by_fkey(name)")
+        .select(
+          filters.withBank
+            ? "*, created_by_profile:profiles!youths_created_by_fkey(name), youth_bank_details(bank_name, account_number, account_name)"
+            : "*, created_by_profile:profiles!youths_created_by_fkey(name)"
+        )
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (filters.status) q = q.eq("verification_status", filters.status);

@@ -1,18 +1,33 @@
 import { useState, useMemo } from "react";
-import { Banknote, Plus, Pencil } from "lucide-react";
+import { Banknote, Plus, Pencil, Check, X, Landmark } from "lucide-react";
 import { useFunding, useSaveFunding, useYouths } from "@/hooks/useData";
+import { useAuth } from "@/context/AuthContext";
 import { Button, Input, Select, Textarea, Field, Badge, ErrorState, EmptyState, Table, Th, Td, Modal, StatCard, TableSkeleton } from "@/components/ui";
 import { FUNDING_META, formatNaira, formatDate } from "@/lib/utils";
 
-const EMPTY = { beneficiary_id: "", amount_approved: "", bank_name: "", account_number: "", status: "pending", notes: "" };
+const EMPTY = { beneficiary_id: "", amount_approved: "", notes: "" };
+
+// Only the Benefits Committee (the role responsible for approving/disbursing grants) and
+// the owner account may move a grant through its status workflow — admins who create grants
+// cannot self-approve or self-disburse them.
+const canDecideFunding = (role) => role === "committee" || role === "super_admin";
 
 export default function Funding() {
   const { data: rows, isLoading, isError, refetch } = useFunding();
-  const { data: youths = [] } = useYouths({ beneficiary: true });
+  const { data: youths = [] } = useYouths({ beneficiary: true, withBank: true });
   const save = useSaveFunding();
+  const { role } = useAuth();
+  const canDecide = canDecideFunding(role);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState("");
+  const [decisionError, setDecisionError] = useState("");
+
+  const selectedYouth = useMemo(
+    () => youths.find((y) => y.id === form.beneficiary_id) ?? null,
+    [youths, form.beneficiary_id]
+  );
+  const selectedBank = selectedYouth?.youth_bank_details ?? null;
 
   const totals = useMemo(() => {
     const list = rows ?? [];
@@ -20,34 +35,58 @@ export default function Funding() {
     return { disbursed: sum("disbursed"), approved: sum("approved"), pending: sum("pending") };
   }, [rows]);
 
+  const editingRow = editing && editing !== "new" ? rows?.find((r) => r.id === editing) : null;
+
   const openNew = () => { setForm(EMPTY); setEditing("new"); setError(""); };
   const openEdit = (r) => {
     setForm({
       beneficiary_id: r.beneficiary_id, amount_approved: r.amount_approved,
-      bank_name: r.bank_name ?? "", account_number: r.account_number ?? "",
-      status: r.status, notes: r.notes ?? "",
+      notes: r.notes ?? "",
     });
     setEditing(r.id);
     setError("");
+    setDecisionError("");
   };
 
   const submit = async (e) => {
     e.preventDefault();
     if (!form.beneficiary_id) { setError("Select a beneficiary"); return; }
     if (!form.amount_approved || Number(form.amount_approved) <= 0) { setError("Enter a valid amount"); return; }
+    if (editing === "new" && !selectedBank) {
+      setError("This beneficiary has not submitted banking details yet — they must add these from their own portal before a grant can be created.");
+      return;
+    }
     const payload = {
-      ...form,
+      beneficiary_id: form.beneficiary_id,
       amount_approved: Number(form.amount_approved),
-      bank_name: form.bank_name || null,
-      account_number: form.account_number || null,
+      bank_name: selectedBank?.bank_name ?? editingRow?.bank_name ?? null,
+      account_number: selectedBank?.account_number ?? editingRow?.account_number ?? null,
       notes: form.notes || null,
-      disbursement_date: form.status === "disbursed" ? new Date().toISOString() : null,
     };
     try {
-      await save.mutateAsync(editing === "new" ? payload : { id: editing, ...payload });
+      if (editing === "new") {
+        // New grants always start pending — only the Benefits Committee can move them forward.
+        await save.mutateAsync({ ...payload, status: "pending", disbursement_date: null });
+      } else {
+        await save.mutateAsync({ id: editing, ...payload });
+      }
       setEditing(null);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const decide = async (status) => {
+    setDecisionError("");
+    try {
+      await save.mutateAsync({
+        id: editing,
+        status,
+        disbursement_date: status === "disbursed" ? new Date().toISOString() : editingRow?.disbursement_date ?? null,
+      });
+      setEditing(null);
+    } catch (err) {
+      setDecisionError(err.message);
     }
   };
 
@@ -117,37 +156,90 @@ export default function Funding() {
       <Modal open={!!editing} onClose={() => setEditing(null)} title={editing === "new" ? "New grant" : "Edit grant"}>
         <form onSubmit={submit} className="space-y-4" noValidate>
           <Field label="Beneficiary" required>
-            <Select value={form.beneficiary_id} onChange={(e) => setForm({ ...form, beneficiary_id: e.target.value })}>
+            <Select
+              value={form.beneficiary_id}
+              disabled={editing !== "new"}
+              onChange={(e) => setForm({ ...form, beneficiary_id: e.target.value })}
+            >
               <option value="">Select beneficiary…</option>
               {youths.map((y) => <option key={y.id} value={y.id}>{y.first_name} {y.last_name}</option>)}
             </Select>
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Amount (NGN)" required>
-              <Input type="number" min="0" value={form.amount_approved} onChange={(e) => setForm({ ...form, amount_approved: e.target.value })} />
-            </Field>
+
+          <Field label="Amount (NGN)" required>
+            <Input type="number" min="0" value={form.amount_approved} onChange={(e) => setForm({ ...form, amount_approved: e.target.value })} />
+          </Field>
+
+          <Field label="Banking details">
+            {selectedBank ? (
+              <div className="flex items-start gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                <Landmark className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div>
+                  <p className="font-medium">{selectedBank.bank_name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedBank.account_number} · {selectedBank.account_name}</p>
+                </div>
+              </div>
+            ) : editing === "new" && !form.beneficiary_id ? (
+              <p className="text-xs text-muted-foreground">Select a beneficiary to load their banking details.</p>
+            ) : (
+              <p className="text-xs font-medium text-amber-600">
+                This beneficiary has not submitted banking details yet.
+              </p>
+            )}
+          </Field>
+
+          {editingRow && (
             <Field label="Status">
-              <Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                {Object.entries(FUNDING_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </Select>
+              <Badge className={FUNDING_META[editingRow.status]?.cls}>{FUNDING_META[editingRow.status]?.label}</Badge>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Set by the Benefits Committee on approval/disbursement — not editable here.
+              </p>
             </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Bank name">
-              <Input value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
-            </Field>
-            <Field label="Account number">
-              <Input value={form.account_number} onChange={(e) => setForm({ ...form, account_number: e.target.value })} inputMode="numeric" />
-            </Field>
-          </div>
+          )}
+
           <Field label="Notes">
             <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </Field>
+
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
             <Button type="submit" loading={save.isPending}>Save</Button>
           </div>
+
+          {editingRow && canDecide && (
+            <div className="space-y-2 border-t pt-4">
+              <p className="text-xs font-medium text-muted-foreground">Benefits Committee decision</p>
+              {decisionError && <p className="text-sm font-medium text-destructive">{decisionError}</p>}
+              <div className="flex flex-wrap gap-2">
+                {editingRow.status === "pending" && (
+                  <>
+                    <Button type="button" size="sm" onClick={() => decide("approved")} loading={save.isPending}>
+                      <Check className="h-4 w-4" /> Approve
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => decide("returned")} loading={save.isPending}>
+                      <X className="h-4 w-4" /> Return for review
+                    </Button>
+                  </>
+                )}
+                {editingRow.status === "approved" && (
+                  <>
+                    <Button type="button" size="sm" onClick={() => decide("disbursed")} loading={save.isPending}>
+                      <Check className="h-4 w-4" /> Mark disbursed
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => decide("failed")} loading={save.isPending}>
+                      <X className="h-4 w-4" /> Mark failed
+                    </Button>
+                  </>
+                )}
+                {(editingRow.status === "returned" || editingRow.status === "failed") && (
+                  <Button type="button" size="sm" onClick={() => decide("pending")} loading={save.isPending}>
+                    Resubmit for review
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </form>
       </Modal>
     </div>
