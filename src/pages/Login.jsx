@@ -24,6 +24,50 @@ function GoogleIcon(props) {
   );
 }
 
+function ForgotPassword({ email, redirectTo }) {
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [err, setErr] = useState("");
+
+  const send = async () => {
+    setErr("");
+    if (!email.trim()) {
+      setErr("Enter your email address above first.");
+      return;
+    }
+    setSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+    setSending(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    setSent(true);
+  };
+
+  if (sent) {
+    return (
+      <p className="text-center text-[11px] text-muted-foreground">
+        Password reset link sent to <span className="font-medium">{email}</span>.
+      </p>
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <button
+        type="button"
+        onClick={send}
+        disabled={sending}
+        className="text-[11px] font-medium text-primary hover:underline disabled:opacity-50"
+      >
+        {sending ? "Sending…" : "Forgot password?"}
+      </button>
+      {err && <p className="mt-1 text-[11px] font-medium text-destructive">{err}</p>}
+    </div>
+  );
+}
+
 function YouthPasswordSignIn() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
@@ -116,6 +160,7 @@ function YouthPasswordSignIn() {
         <Button type="submit" className="w-full" loading={loading} disabled={googleLoading}>
           <LogIn className="h-4 w-4" /> Sign in
         </Button>
+        <ForgotPassword email={email} redirectTo={`${window.location.origin}/reset-password?portal=candidate`} />
         <p className="text-center text-[11px] text-muted-foreground">
           Only works if you've set a password from your portal. Otherwise use Google or the email link instead.
         </p>
@@ -501,6 +546,7 @@ export default function Login() {
                   <Button type="submit" className="w-full" loading={loading} disabled={googleLoading}>
                     <LogIn className="h-4 w-4" /> Sign in
                   </Button>
+                  <ForgotPassword email={email} redirectTo={`${window.location.origin}/reset-password?portal=staff`} />
                 </form>
 
                 <div className="mt-5 border-t pt-4">

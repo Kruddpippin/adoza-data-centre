@@ -11,6 +11,12 @@ import { Button, Card, Field, Input } from "@/components/ui";
 
 WebBrowser.maybeCompleteAuthSession();
 
+// Password reset goes through the web app's page rather than a native deep link —
+// the recovery email is often opened on a different device/email client than the one
+// running this app, so a universal https:// link is far more reliable than a custom
+// URL scheme the mail client may not recognize.
+const WEB_RESET_PASSWORD_URL = "https://adoza-data-centre.vercel.app/reset-password?portal=staff";
+
 const DEMO_ACCOUNTS = [
   { label: "Admin", email: "admin@adoza.ng" },
   { label: "Enumerator", email: "enumerator@adoza.ng" },
@@ -40,6 +46,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const submit = async () => {
     setError("");
@@ -87,6 +95,24 @@ export default function Login() {
     } finally {
       setGoogleLoading(false);
     }
+  };
+
+  const sendPasswordReset = async () => {
+    setError("");
+    if (!email.trim()) {
+      setError("Enter your email address above first.");
+      return;
+    }
+    setResetLoading(true);
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: WEB_RESET_PASSWORD_URL,
+    });
+    setResetLoading(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setResetSent(true);
   };
 
   const quickFill = (demoEmail: string) => {
@@ -152,6 +178,19 @@ export default function Login() {
           <Button onPress={submit} loading={loading} disabled={googleLoading}>
             Sign in
           </Button>
+
+          {resetSent ? (
+            <Text className="text-center text-[11px] text-muted-foreground">
+              Password reset link sent to <Text className="font-medium">{email}</Text>. Open it on any device to set a new
+              password, then come back and sign in here.
+            </Text>
+          ) : (
+            <Pressable onPress={sendPasswordReset} disabled={resetLoading} hitSlop={8}>
+              <Text className="text-center text-[11px] font-medium text-primary">
+                {resetLoading ? "Sending…" : "Forgot password?"}
+              </Text>
+            </Pressable>
+          )}
 
           <View className="mt-2 gap-2 border-t border-border pt-4">
             <Text className="text-center text-[11px] font-medium uppercase tracking-wider text-muted-foreground">

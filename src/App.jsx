@@ -23,6 +23,7 @@ const About = lazy(() => import("@/pages/About"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const TermsOfConditions = lazy(() => import("@/pages/TermsOfConditions"));
 const Login = lazy(() => import("@/pages/Login"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const YouthPortal = lazy(() => import("@/pages/YouthPortal"));
 const StaffApplication = lazy(() => import("@/pages/StaffApplication"));
 const OAuthAuthorize = lazy(() => import("@/pages/OAuthAuthorize"));
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-conditions" element={<TermsOfConditions />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/my-registration" element={<YouthPortal />} />
           <Route path="/staff-application" element={<StaffApplication />} />
           <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
