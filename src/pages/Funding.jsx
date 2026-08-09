@@ -23,6 +23,18 @@ export default function Funding() {
   const [error, setError] = useState("");
   const [decisionError, setDecisionError] = useState("");
 
+  // A beneficiary with a grant already in flight (anything but failed/returned) can't
+  // be picked for a new one — mirrors the DB's partial unique index, so this is UX only,
+  // not the actual guard.
+  const activeBeneficiaryIds = useMemo(
+    () => new Set((rows ?? []).filter((r) => !["failed", "returned"].includes(r.status)).map((r) => r.beneficiary_id)),
+    [rows]
+  );
+  const selectableYouths = useMemo(
+    () => (editing === "new" ? youths.filter((y) => !activeBeneficiaryIds.has(y.id)) : youths),
+    [youths, activeBeneficiaryIds, editing]
+  );
+
   const selectedYouth = useMemo(
     () => youths.find((y) => y.id === form.beneficiary_id) ?? null,
     [youths, form.beneficiary_id]
@@ -72,7 +84,11 @@ export default function Funding() {
       }
       setEditing(null);
     } catch (err) {
-      setError(err.message);
+      setError(
+        /funding_one_active_grant_per_beneficiary/.test(err.message)
+          ? "This beneficiary already has a grant in progress — resolve or fail/return it before creating another."
+          : err.message
+      );
     }
   };
 
@@ -162,8 +178,13 @@ export default function Funding() {
               onChange={(e) => setForm({ ...form, beneficiary_id: e.target.value })}
             >
               <option value="">Select beneficiary…</option>
-              {youths.map((y) => <option key={y.id} value={y.id}>{y.first_name} {y.last_name}</option>)}
+              {selectableYouths.map((y) => <option key={y.id} value={y.id}>{y.first_name} {y.last_name}</option>)}
             </Select>
+            {editing === "new" && !selectableYouths.length && (
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                No eligible beneficiaries — everyone approved already has a grant in progress.
+              </p>
+            )}
           </Field>
 
           <Field label="Amount (NGN)" required>
