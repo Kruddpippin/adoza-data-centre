@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner } from "@/components/ui";
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, isAdminRole } from "@/lib/utils";
 
 const EMPTY = {
@@ -35,9 +36,13 @@ export default function YouthForm() {
   const { data: skillsCatalogue = [] } = useSkills();
   const save = useSaveYouth();
 
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState(EMPTY);
-  const [skillRows, setSkillRows] = useState([]);
+  // Only persisted for a brand-new registration, not an edit — an edit's form state
+  // comes from the server (via the effect below), so a stale draft would be wrong there.
+  // Keyed by the enumerator's own id so a draft never leaks to a different staff member.
+  const draftKey = id ? null : `adoza-draft-youth-form-${user.id}`;
+  const [step, setStep, clearStepDraft] = usePersistedState(draftKey && `${draftKey}-step`, 0);
+  const [form, setForm, clearFormDraft] = usePersistedState(draftKey && `${draftKey}-form`, EMPTY);
+  const [skillRows, setSkillRows, clearSkillsDraft] = usePersistedState(draftKey && `${draftKey}-skills`, []);
   const [errors, setErrors] = useState({});
   const [gpsStatus, setGpsStatus] = useState("");
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -171,6 +176,11 @@ export default function YouthForm() {
     if (!id) payload.created_by = user.id;
     try {
       const saved = await save.mutateAsync(id ? { id, ...payload } : payload);
+      if (!id) {
+        clearFormDraft();
+        clearSkillsDraft();
+        clearStepDraft();
+      }
       navigate(`/youths/${saved.id}`);
     } catch (err) {
       setErrors((prev) => ({ ...prev, _root: err.message }));

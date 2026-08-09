@@ -17,6 +17,7 @@ import {
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
 import { NotificationsBell, useDropdown } from "@/components/NotificationsBell";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { PasswordSettingsForm } from "@/components/PasswordSettingsForm";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
@@ -676,9 +677,12 @@ const REGISTER_STEPS = [
 function SelfRegisterForm({ user }) {
   const { data: skillsCatalogue = [] } = useSkills();
   const save = useSaveYouth();
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ ...EMPTY, email: user?.email ?? "" });
-  const [skillRows, setSkillRows] = useState([]);
+  // Keyed by user id so a draft never leaks between different people signing in on the
+  // same device, and so it survives both a plain page refresh and the 10-minute idle
+  // sign-out redirecting them back through /login to this same form.
+  const [step, setStep, clearStepDraft] = usePersistedState(`adoza-draft-register-step-${user.id}`, 0);
+  const [form, setForm, clearFormDraft] = usePersistedState(`adoza-draft-register-form-${user.id}`, { ...EMPTY, email: user?.email ?? "" });
+  const [skillRows, setSkillRows, clearSkillsDraft] = usePersistedState(`adoza-draft-register-skills-${user.id}`, []);
   const [errors, setErrors] = useState({});
   const [gpsStatus, setGpsStatus] = useState("");
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -781,6 +785,9 @@ function SelfRegisterForm({ user }) {
         consent_date: new Date().toISOString(),
         skills: skillRows.filter((s) => s.skill_id),
       });
+      clearFormDraft();
+      clearSkillsDraft();
+      clearStepDraft();
     } catch (err) {
       setErrors((prev) => ({ ...prev, _root: err.message }));
     }

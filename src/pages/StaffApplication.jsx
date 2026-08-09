@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState } from "@/components/ui";
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   APPLICABLE_ROLES, ROLE_LABELS, KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS,
 } from "@/lib/utils";
@@ -103,9 +104,11 @@ const EMPTY = {
 
 function ApplyForm({ user }) {
   const submit = useSubmitStaffApplication();
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState(EMPTY);
-  const [appliedRole, setAppliedRole] = useState("");
+  // Keyed by user id so the draft survives a refresh or the 10-minute idle sign-out
+  // redirect, without leaking between different applicants on a shared device.
+  const [step, setStep, clearStepDraft] = usePersistedState(`adoza-draft-staff-apply-step-${user.id}`, 0);
+  const [form, setForm, clearFormDraft] = usePersistedState(`adoza-draft-staff-apply-form-${user.id}`, EMPTY);
+  const [appliedRole, setAppliedRole, clearRoleDraft] = usePersistedState(`adoza-draft-staff-apply-role-${user.id}`, "");
   const [errors, setErrors] = useState({});
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState("");
@@ -214,6 +217,9 @@ function ApplyForm({ user }) {
         consent_given: form.consent_given,
         consent_date: new Date().toISOString(),
       });
+      clearFormDraft();
+      clearRoleDraft();
+      clearStepDraft();
     } catch (err) {
       setErrors((prev) => ({ ...prev, _root: err.message }));
     }
