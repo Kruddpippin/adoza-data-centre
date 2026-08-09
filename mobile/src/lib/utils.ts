@@ -68,6 +68,13 @@ export const EMPLOYMENT_LABELS: Record<string, string> = {
 
 export const EDUCATION_LEVELS = ["None", "Primary", "Secondary", "Tertiary", "Postgraduate"];
 
+export const ID_TYPES = [
+  { value: "voters_card", label: "Voter's Card" },
+  { value: "nin", label: "National Identification Number" },
+  { value: "passport", label: "International Passport" },
+  { value: "drivers_license", label: "Driver's License" },
+];
+
 export const DELIVERY_METHOD_LABELS: Record<string, string> = {
   home_address: "Deliver to home address",
   custom_address: "Deliver to a different address",

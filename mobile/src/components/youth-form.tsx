@@ -8,10 +8,11 @@ import { Image, Platform, Pressable, ScrollView, Text, View } from "react-native
 
 import { useAuth } from "@/context/AuthContext";
 import { useSaveYouth, useSkills, useYouth } from "@/hooks/useData";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Field, Input, Spinner } from "@/components/ui";
 import { SelectField } from "@/components/select-modal";
-import { EDUCATION_LEVELS, EMPLOYMENT_LABELS, KOGI_LGAS, KOGI_WARDS_BY_LGA } from "@/lib/utils";
+import { EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, KOGI_LGAS, KOGI_WARDS_BY_LGA, isAdminRole } from "@/lib/utils";
 
 const EMPTY = {
   photo_url: "",
@@ -30,6 +31,7 @@ const EMPTY = {
   monthly_income: "",
   business_name: "",
   business_address: "",
+  government_id_type: "",
   government_id: "",
   latitude: "",
   longitude: "",
@@ -54,13 +56,17 @@ function Checkbox({ checked, onToggle, label }: { checked: boolean; onToggle: ()
 
 export function YouthForm({ youthId }: { youthId?: string }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { data: existing, isLoading: loadingYouth } = useYouth(youthId);
   const { data: skillsCatalogue = [] } = useSkills();
   const save = useSaveYouth();
 
-  const [form, setForm] = useState(EMPTY);
-  const [skillRows, setSkillRows] = useState<SkillRow[]>([]);
+  // Only persisted for a brand-new registration, not an edit — an edit's form state
+  // comes from the server (via the effect below), so a stale draft would be wrong there.
+  // Keyed by the enumerator's own id so a draft never leaks to a different staff member.
+  const draftKey = youthId ? null : `adoza-draft-youth-form-${user?.id}`;
+  const [form, setForm, clearFormDraft] = usePersistedState(draftKey && `${draftKey}-form`, EMPTY);
+  const [skillRows, setSkillRows, clearSkillsDraft] = usePersistedState<SkillRow[]>(draftKey && `${draftKey}-skills`, []);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [gpsStatus, setGpsStatus] = useState("");
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -97,6 +103,12 @@ export function YouthForm({ youthId }: { youthId?: string }) {
     setForm((f) => ({ ...f, lga, ward: (KOGI_WARDS_BY_LGA[lga] ?? []).includes(f.ward) ? f.ward : "" }));
 
   const wardOptions = KOGI_WARDS_BY_LGA[form.lga] ?? [];
+
+  // Only retakes of an already-saved photo count against the cap — the very first save
+  // is free. Admins are exempt, same as the database-side enforcement (the DB is the
+  // actual guard; this just avoids surfacing a raw error for the common case).
+  const photoRetakesUsed = youthId ? ((existing as any)?.photo_update_count ?? 0) : 0;
+  const photoLocked = !!youthId && !!(existing as any)?.photo_url && photoRetakesUsed >= 2 && !isAdminRole(role);
 
   const captureGps = async () => {
     setGpsLoading(true);
@@ -174,6 +186,7 @@ export function YouthForm({ youthId }: { youthId?: string }) {
       occupation: form.occupation || null,
       business_name: form.business_name || null,
       business_address: form.business_address || null,
+      government_id_type: form.government_id_type || null,
       government_id: form.government_id || null,
       monthly_income: form.monthly_income === "" ? null : Number(form.monthly_income),
       latitude: form.latitude === "" ? null : Number(form.latitude),
@@ -184,9 +197,18 @@ export function YouthForm({ youthId }: { youthId?: string }) {
     if (!youthId) payload.created_by = user?.id;
     try {
       const saved = await save.mutateAsync(youthId ? { id: youthId, ...payload } : payload);
+      if (!youthId) {
+        clearFormDraft();
+        clearSkillsDraft();
+      }
       router.replace(`/youths/${saved.id}`);
     } catch (err: any) {
-      setErrors((prev) => ({ ...prev, _root: err.message }));
+      setErrors((prev) => ({
+        ...prev,
+        _root: /may only update their photo/.test(err.message)
+          ? "Photo retake limit reached (2/2). Only an admin can change it now."
+          : err.message,
+      }));
     }
   };
 
@@ -205,10 +227,21 @@ export function YouthForm({ youthId }: { youthId?: string }) {
             </View>
           )}
           <View className="flex-1 gap-1.5">
-            <Button variant="outline" className="h-9 flex-row gap-1.5 self-start px-3" loading={photoLoading} onPress={capturePhoto}>
-              <Ionicons name="camera-outline" size={16} color="#101a16" />
-              <Text className="text-sm font-semibold text-foreground">{form.photo_url ? "Retake photo" : "Take photo"}</Text>
-            </Button>
+            {photoLocked ? (
+              <Text className="text-xs font-medium text-muted-foreground">
+                Photo retake limit reached (2/2). Only an admin can change it now.
+              </Text>
+            ) : (
+              <>
+                <Button variant="outline" className="h-9 flex-row gap-1.5 self-start px-3" loading={photoLoading} onPress={capturePhoto}>
+                  <Ionicons name="camera-outline" size={16} color="#101a16" />
+                  <Text className="text-sm font-semibold text-foreground">{form.photo_url ? "Retake photo" : "Take photo"}</Text>
+                </Button>
+                {youthId && (existing as any)?.photo_url && !isAdminRole(role) ? (
+                  <Text className="text-[11px] text-muted-foreground">{Math.max(0, 2 - photoRetakesUsed)} retake(s) left</Text>
+                ) : null}
+              </>
+            )}
             {photoStatus ? <Text className="text-xs text-muted-foreground">{photoStatus}</Text> : null}
           </View>
         </View>
@@ -262,8 +295,17 @@ export function YouthForm({ youthId }: { youthId?: string }) {
         <Field label="Email">
           <Input value={form.email} onChangeText={(v) => set("email")(v)} keyboardType="email-address" autoCapitalize="none" />
         </Field>
-        <Field label="Government ID (NIN / voter card)">
-          <Input value={form.government_id} onChangeText={(v) => set("government_id")(v)} />
+        <Field label="Means of Identification">
+          <SelectField
+            label="Means of Identification"
+            value={form.government_id_type}
+            placeholder="Select Identification…"
+            onChange={(v) => set("government_id_type")(v)}
+            options={ID_TYPES}
+          />
+        </Field>
+        <Field label="Document Number">
+          <Input value={form.government_id} onChangeText={(v) => set("government_id")(v)} placeholder="Document Number" />
         </Field>
         <Field label="Highest education">
           <SelectField
