@@ -7,7 +7,7 @@ import {
 import { useYouth, useUpdateYouth } from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge, Spinner, ErrorState, Modal, Textarea, Field, Input } from "@/components/ui";
-import { VERIFICATION_META, EMPLOYMENT_LABELS, DELIVERY_METHOD_LABELS, ageFrom, formatDate, formatDateTime, formatNaira, isAdminRole, cn } from "@/lib/utils";
+import { VERIFICATION_META, EMPLOYMENT_LABELS, DELIVERY_METHOD_LABELS, ID_TYPES, ageFrom, formatDate, formatDateTime, formatNaira, isAdminRole, cn } from "@/lib/utils";
 
 function BankDetailsCard({ bank }) {
   return (
@@ -309,7 +309,15 @@ export default function YouthDetail() {
                 </a>
               )}
               <InfoRow icon={ShieldCheck} label="Consent" value={youth.consent_given ? `Given ${formatDate(youth.consent_date)}` : "Not given"} />
-              <InfoRow icon={BadgeCheck} label="Government ID" value={youth.government_id} />
+              <InfoRow
+                icon={BadgeCheck}
+                label="Government ID"
+                value={
+                  youth.government_id
+                    ? `${youth.government_id}${youth.government_id_type ? ` (${ID_TYPES.find((t) => t.value === youth.government_id_type)?.label ?? youth.government_id_type})` : ""}`
+                    : null
+                }
+              />
               <div className="grid grid-cols-3 gap-1.5 pt-1">
                 {[["Training", youth.needs_training], ["Equipment", youth.needs_equipment], ["Funding", youth.needs_funding]].map(([label, val]) => (
                   <span key={label} className={cn("rounded-md px-2 py-1 text-center text-[10px] font-semibold", val ? "bg-accent/15 text-accent-foreground" : "bg-muted text-muted-foreground")}>

@@ -1,13 +1,23 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LogOut, Send, Clock, XCircle, AlertTriangle, Camera, User, MapPin } from "lucide-react";
+import {
+  LogOut, Send, Clock, XCircle, AlertTriangle, Camera, User, MapPin, ArrowLeft, Briefcase, ClipboardCheck,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMyStaffApplication, useSubmitStaffApplication, useMyYouthRecord } from "@/hooks/useData";
 import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState } from "@/components/ui";
+import { Stepper } from "@/components/Stepper";
 import {
   APPLICABLE_ROLES, ROLE_LABELS, KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS,
 } from "@/lib/utils";
+
+const APPLY_STEPS = [
+  { title: "Personal Details", icon: User },
+  { title: "Location", icon: MapPin },
+  { title: "Employment", icon: Briefcase },
+  { title: "Role & Consent", icon: ClipboardCheck },
+];
 
 function PortalHeader() {
   const { signOut } = useAuth();
@@ -92,6 +102,7 @@ const EMPTY = {
 
 function ApplyForm({ user }) {
   const submit = useSubmitStaffApplication();
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState(EMPTY);
   const [appliedRole, setAppliedRole] = useState("");
   const [errors, setErrors] = useState({});
@@ -150,23 +161,40 @@ function ApplyForm({ user }) {
     }
   };
 
-  const validate = () => {
+  const validateStep = (i) => {
     const e = {};
-    if (!form.first_name.trim()) e.first_name = "Required";
-    if (!form.last_name.trim()) e.last_name = "Required";
-    if (!form.date_of_birth) e.date_of_birth = "Required";
-    if (!form.phone.trim()) e.phone = "Required";
-    if (!form.lga) e.lga = "Required";
-    if (!form.ward) e.ward = "Required";
-    if (!appliedRole) e.appliedRole = "Required";
-    if (!form.consent_given) e.consent_given = "Consent is required to apply";
+    if (i === 0) {
+      if (!form.first_name.trim()) e.first_name = "Required";
+      if (!form.last_name.trim()) e.last_name = "Required";
+      if (!form.date_of_birth) e.date_of_birth = "Required";
+      if (!form.phone.trim()) e.phone = "Required";
+    }
+    if (i === 1) {
+      if (!form.lga) e.lga = "Required";
+      if (!form.ward) e.ward = "Required";
+    }
+    if (i === 3) {
+      if (!appliedRole) e.appliedRole = "Required";
+      if (!form.consent_given) e.consent_given = "Consent is required to apply";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
+  const goNext = () => {
+    if (!validateStep(step)) return;
+    setStep((s) => Math.min(s + 1, APPLY_STEPS.length - 1));
+  };
+  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    for (let i = 0; i < APPLY_STEPS.length; i++) {
+      if (!validateStep(i)) {
+        setStep(i);
+        return;
+      }
+    }
     try {
       await submit.mutateAsync({
         user_id: user.id,
@@ -194,140 +222,163 @@ function ApplyForm({ user }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      <Card>
-        <CardHeader><CardTitle>Photo</CardTitle></CardHeader>
-        <CardContent className="flex items-center gap-4">
-          {form.photo_url ? (
-            <img
-              src={form.photo_url}
-              alt={form.first_name ? `${form.first_name} ${form.last_name}` : "Applicant photo preview"}
-              className="h-16 w-16 rounded-lg object-cover"
-            />
+    <div className="space-y-4">
+      <Stepper steps={APPLY_STEPS} currentStep={step} />
+
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {step === 0 && (
+          <>
+            <Card>
+              <CardHeader><CardTitle>Photo</CardTitle></CardHeader>
+              <CardContent className="flex items-center gap-4">
+                {form.photo_url ? (
+                  <img
+                    src={form.photo_url}
+                    alt={form.first_name ? `${form.first_name} ${form.last_name}` : "Applicant photo preview"}
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
+                    <User className="h-6 w-6 text-muted-foreground" aria-hidden />
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted">
+                    <Camera className="h-4 w-4" />
+                    {form.photo_url ? "Retake photo" : "Take / upload photo"}
+                    <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} disabled={photoUploading} />
+                  </label>
+                  {photoUploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
+                  {photoError && <p className="text-xs font-medium text-destructive">{photoError}</p>}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Personal details</CardTitle></CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <Field label="First name" required error={errors.first_name}>
+                  <Input value={form.first_name} onChange={set("first_name")} />
+                </Field>
+                <Field label="Last name" required error={errors.last_name}>
+                  <Input value={form.last_name} onChange={set("last_name")} />
+                </Field>
+                <Field label="Gender" required>
+                  <Select value={form.gender} onChange={set("gender")}>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </Select>
+                </Field>
+                <Field label="Date of birth" required error={errors.date_of_birth}>
+                  <Input type="date" value={form.date_of_birth} onChange={set("date_of_birth")} max={new Date().toISOString().slice(0, 10)} />
+                </Field>
+                <Field label="Phone" required error={errors.phone}>
+                  <Input type="tel" value={form.phone} onChange={set("phone")} placeholder="+234…" />
+                </Field>
+                <Field label="Email">
+                  <Input value={user?.email ?? ""} disabled />
+                </Field>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {step === 1 && (
+          <Card>
+            <CardHeader><CardTitle>Location</CardTitle></CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <Field label="LGA" required error={errors.lga}>
+                <Select value={form.lga} onChange={setLga}>
+                  <option value="">Select LGA…</option>
+                  {KOGI_LGAS.map((l) => <option key={l} value={l}>{l}</option>)}
+                </Select>
+              </Field>
+              <Field label="Ward" required error={errors.ward}>
+                <Select value={form.ward} onChange={set("ward")} disabled={!form.lga}>
+                  <option value="">{form.lga ? "Select ward…" : "Select LGA first…"}</option>
+                  {wardOptions.map((w) => <option key={w} value={w}>{w}</option>)}
+                </Select>
+              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Home address">
+                  <Input value={form.address} onChange={set("address")} />
+                </Field>
+              </div>
+              <Field label="Latitude">
+                <Input value={form.latitude} onChange={set("latitude")} inputMode="decimal" />
+              </Field>
+              <Field label="Longitude">
+                <Input value={form.longitude} onChange={set("longitude")} inputMode="decimal" />
+              </Field>
+              <div className="flex items-center gap-3 sm:col-span-2">
+                <Button type="button" variant="outline" size="sm" onClick={captureGps}>
+                  <MapPin className="h-4 w-4" /> Capture current location
+                </Button>
+                {gpsStatus && <p className="text-xs text-muted-foreground">{gpsStatus}</p>}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 2 && (
+          <Card>
+            <CardHeader><CardTitle>Employment</CardTitle></CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <Field label="Employment status" required>
+                <Select value={form.employment_status} onChange={set("employment_status")}>
+                  {Object.entries(EMPLOYMENT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </Select>
+              </Field>
+              <Field label="Highest education">
+                <Select value={form.highest_education} onChange={set("highest_education")}>
+                  {EDUCATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                </Select>
+              </Field>
+              <Field label="Occupation">
+                <Input value={form.occupation} onChange={set("occupation")} />
+              </Field>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 3 && (
+          <Card>
+            <CardHeader><CardTitle>Role &amp; consent</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <Field label="Role you're applying for" required error={errors.appliedRole}>
+                <Select value={appliedRole} onChange={(e) => setAppliedRole(e.target.value)}>
+                  <option value="">Select a role…</option>
+                  {APPLICABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                </Select>
+              </Field>
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+                <input type="checkbox" checked={form.consent_given} onChange={set("consent_given")} className="mt-0.5 h-4 w-4 accent-[hsl(152,65%,22%)]" />
+                <span>
+                  I consent to the collection and use of my data for the ADOZA Data Centre project.
+                  {errors.consent_given && <span className="block text-[11px] font-medium text-destructive">{errors.consent_given}</span>}
+                </span>
+              </label>
+            </CardContent>
+          </Card>
+        )}
+
+        {errors._root && <p className="text-sm font-medium text-destructive">{errors._root}</p>}
+
+        <div className="flex justify-between gap-2">
+          <Button type="button" variant="outline" onClick={goBack} disabled={step === 0}>
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Button>
+          {step < APPLY_STEPS.length - 1 ? (
+            <Button type="button" onClick={goNext}>Next</Button>
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
-              <User className="h-6 w-6 text-muted-foreground" aria-hidden />
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted">
-              <Camera className="h-4 w-4" />
-              {form.photo_url ? "Retake photo" : "Take / upload photo"}
-              <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} disabled={photoUploading} />
-            </label>
-            {photoUploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
-            {photoError && <p className="text-xs font-medium text-destructive">{photoError}</p>}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle>Personal details</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field label="First name" required error={errors.first_name}>
-            <Input value={form.first_name} onChange={set("first_name")} />
-          </Field>
-          <Field label="Last name" required error={errors.last_name}>
-            <Input value={form.last_name} onChange={set("last_name")} />
-          </Field>
-          <Field label="Gender" required>
-            <Select value={form.gender} onChange={set("gender")}>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </Select>
-          </Field>
-          <Field label="Date of birth" required error={errors.date_of_birth}>
-            <Input type="date" value={form.date_of_birth} onChange={set("date_of_birth")} max={new Date().toISOString().slice(0, 10)} />
-          </Field>
-          <Field label="Phone" required error={errors.phone}>
-            <Input type="tel" value={form.phone} onChange={set("phone")} placeholder="+234…" />
-          </Field>
-          <Field label="Email">
-            <Input value={user?.email ?? ""} disabled />
-          </Field>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle>Location</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field label="LGA" required error={errors.lga}>
-            <Select value={form.lga} onChange={setLga}>
-              <option value="">Select LGA…</option>
-              {KOGI_LGAS.map((l) => <option key={l} value={l}>{l}</option>)}
-            </Select>
-          </Field>
-          <Field label="Ward" required error={errors.ward}>
-            <Select value={form.ward} onChange={set("ward")} disabled={!form.lga}>
-              <option value="">{form.lga ? "Select ward…" : "Select LGA first…"}</option>
-              {wardOptions.map((w) => <option key={w} value={w}>{w}</option>)}
-            </Select>
-          </Field>
-          <div className="sm:col-span-2">
-            <Field label="Home address">
-              <Input value={form.address} onChange={set("address")} />
-            </Field>
-          </div>
-          <Field label="Latitude">
-            <Input value={form.latitude} onChange={set("latitude")} inputMode="decimal" />
-          </Field>
-          <Field label="Longitude">
-            <Input value={form.longitude} onChange={set("longitude")} inputMode="decimal" />
-          </Field>
-          <div className="flex items-center gap-3 sm:col-span-2">
-            <Button type="button" variant="outline" size="sm" onClick={captureGps}>
-              <MapPin className="h-4 w-4" /> Capture current location
+            <Button type="submit" loading={submit.isPending}>
+              <Send className="h-4 w-4" /> Submit application
             </Button>
-            {gpsStatus && <p className="text-xs text-muted-foreground">{gpsStatus}</p>}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle>Employment</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field label="Employment status" required>
-            <Select value={form.employment_status} onChange={set("employment_status")}>
-              {Object.entries(EMPLOYMENT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </Select>
-          </Field>
-          <Field label="Highest education">
-            <Select value={form.highest_education} onChange={set("highest_education")}>
-              {EDUCATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-            </Select>
-          </Field>
-          <Field label="Occupation">
-            <Input value={form.occupation} onChange={set("occupation")} />
-          </Field>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle>Role & consent</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <Field label="Role you're applying for" required error={errors.appliedRole}>
-            <Select value={appliedRole} onChange={(e) => setAppliedRole(e.target.value)}>
-              <option value="">Select a role…</option>
-              {APPLICABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-            </Select>
-          </Field>
-          <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
-            <input type="checkbox" checked={form.consent_given} onChange={set("consent_given")} className="mt-0.5 h-4 w-4 accent-[hsl(152,65%,22%)]" />
-            <span>
-              I consent to the collection and use of my data for the ADOZA Data Centre project.
-              {errors.consent_given && <span className="block text-[11px] font-medium text-destructive">{errors.consent_given}</span>}
-            </span>
-          </label>
-        </CardContent>
-      </Card>
-
-      {errors._root && <p className="text-sm font-medium text-destructive">{errors._root}</p>}
-
-      <Button type="submit" className="w-full" loading={submit.isPending}>
-        <Send className="h-4 w-4" /> Submit application
-      </Button>
-    </form>
+          )}
+        </div>
+      </form>
+    </div>
   );
 }
 

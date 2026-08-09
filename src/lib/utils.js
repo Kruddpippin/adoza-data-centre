@@ -88,6 +88,13 @@ export const EMPLOYMENT_LABELS = {
 
 export const EDUCATION_LEVELS = ["None", "Primary", "Secondary", "Tertiary", "Postgraduate"];
 
+export const ID_TYPES = [
+  { value: "voters_card", label: "Voter's Card" },
+  { value: "nin", label: "National Identification Number" },
+  { value: "passport", label: "International Passport" },
+  { value: "drivers_license", label: "Driver's License" },
+];
+
 // CBN-licensed banks (name + sort code), for the candidate bank-details form.
 export const NIGERIAN_BANKS = [
   { code: "044", name: "Access Bank" },

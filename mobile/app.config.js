@@ -30,7 +30,7 @@ module.exports = {
       },
       predictiveBackGestureEnabled: false,
       permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
-      versionCode: 5,
+      versionCode: 6,
     },
     web: {
       output: "single",
@@ -41,7 +41,7 @@ module.exports = {
       [
         "expo-location",
         {
-          locationWhenInUsePermission: "ADOZA uses your location to record where a youth is registered during door-to-door visits.",
+          locationWhenInUsePermission: "ADOZA uses your location to record where a candidate is registered during door-to-door visits.",
         },
       ],
       [
@@ -56,7 +56,7 @@ module.exports = {
       [
         "expo-image-picker",
         {
-          cameraPermission: "ADOZA uses your camera to capture a photo of the youth during door-to-door registration.",
+          cameraPermission: "ADOZA uses your camera to capture a photo of the candidate during door-to-door registration.",
           photosPermission: false,
         },
       ],
