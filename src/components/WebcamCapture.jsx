@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera } from "lucide-react";
-import { Button, Modal } from "@/components/ui";
+import { Camera, X } from "lucide-react";
+import { Modal } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 // Live webcam capture only — deliberately no file-picker fallback. A candidate uploading
@@ -88,25 +88,54 @@ export function WebcamCaptureButton({ label, onCapture, facingMode = "user" }) {
           {error ? (
             <p className="text-sm font-medium text-destructive">{error}</p>
           ) : (
-            <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-black">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className={cn("h-full w-full object-cover", facingMode === "user" && "[transform:scaleX(-1)]")}
-              />
-              {!ready && (
-                <div className="absolute inset-0 flex items-center justify-center text-xs text-white/70">Starting camera…</div>
-              )}
-            </div>
+            <>
+              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-black">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={cn("h-full w-full object-cover", facingMode === "user" && "[transform:scaleX(-1)]")}
+                />
+                {!ready && (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-white/70">Starting camera…</div>
+                )}
+
+                {/* Oval face guide: dims everything outside the oval so the candidate can
+                    line their face up inside it before capturing. */}
+                {ready && (
+                  <div
+                    className="pointer-events-none absolute left-1/2 top-1/2 h-[78%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-2 border-white/80"
+                    style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }}
+                    aria-hidden
+                  />
+                )}
+
+                {/* Capture/Cancel on the side of the frame, not below it — reachable with
+                    one thumb while holding the phone up to frame a selfie. */}
+                <div className="absolute inset-y-0 right-2 flex flex-col items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={capture}
+                    disabled={!ready}
+                    aria-label="Capture photo"
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-white/80 transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <Camera className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={close}
+                    aria-label="Cancel"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-105"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <p className="text-center text-[11px] text-muted-foreground">Position your face inside the oval, then capture.</p>
+            </>
           )}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={close}>Cancel</Button>
-            <Button type="button" onClick={capture} disabled={!ready || !!error}>
-              <Camera className="h-4 w-4" /> Capture
-            </Button>
-          </div>
         </div>
       </Modal>
     </>
