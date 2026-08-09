@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner } from "@/components/ui";
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
-import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES } from "@/lib/utils";
+import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, isAdminRole } from "@/lib/utils";
 
 const EMPTY = {
   photo_url: "", first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
@@ -30,7 +30,7 @@ const STEPS = [
 export default function YouthForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { data: existing, isLoading: loadingYouth } = useYouth(id);
   const { data: skillsCatalogue = [] } = useSkills();
   const save = useSaveYouth();
@@ -75,6 +75,12 @@ export default function YouthForm() {
   };
 
   const wardOptions = KOGI_WARDS_BY_LGA[form.lga] ?? [];
+
+  // Only retakes of an already-saved photo count against the cap — the very first save
+  // (whether at registration or a later first upload) is free. Admins are exempt, same
+  // as the database-side enforcement, so they can still fix a bad photo after the cap.
+  const photoRetakesUsed = id ? (existing?.photo_update_count ?? 0) : 0;
+  const photoLocked = !!id && !!existing?.photo_url && photoRetakesUsed >= 2 && !isAdminRole(role);
 
   const captureGps = () => {
     if (!navigator.geolocation) {
@@ -204,12 +210,23 @@ export default function YouthForm() {
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <WebcamCaptureButton
-                    label={form.photo_url ? "Retake photo" : "Take photo"}
-                    facingMode="environment"
-                    onCapture={handlePhotoCapture}
-                  />
-                  <p className="text-[11px] text-muted-foreground">Live camera only — uploading an existing photo isn't allowed, to prevent duplicate registrations.</p>
+                  {photoLocked ? (
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Photo retake limit reached (2/2). Only an admin can change it now.
+                    </p>
+                  ) : (
+                    <>
+                      <WebcamCaptureButton
+                        label={form.photo_url ? "Retake photo" : "Take photo"}
+                        facingMode="environment"
+                        onCapture={handlePhotoCapture}
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Live camera only — uploading an existing photo isn't allowed, to prevent duplicate registrations.
+                        {id && existing?.photo_url && !isAdminRole(role) && ` ${Math.max(0, 2 - photoRetakesUsed)} retake${2 - photoRetakesUsed === 1 ? "" : "s"} left.`}
+                      </p>
+                    </>
+                  )}
                   {photoUploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
                   {photoError && <p className="text-xs text-destructive">{photoError}</p>}
                 </div>

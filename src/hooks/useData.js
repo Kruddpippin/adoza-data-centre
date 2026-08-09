@@ -69,6 +69,16 @@ export function useMyYouthRecord(userId) {
   });
 }
 
+// Permanently deletes the caller's own account and every trace of it (youths row and
+// everything that cascades from it, notifications, staff application, and the auth
+// user itself) via a SECURITY DEFINER RPC — the client has no direct delete rights on
+// auth.users, so this can't be done with a plain table mutation.
+export function useDeleteOwnAccount() {
+  return useMutation({
+    mutationFn: () => run(supabase.rpc("delete_own_account")),
+  });
+}
+
 export function useClaimYouthRecord() {
   const qc = useQueryClient();
   return useMutation({

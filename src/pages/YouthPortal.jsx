@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
   Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2, Camera, User, AlertTriangle,
@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
   useMyYouthRecord, useClaimYouthRecord, useSaveYouth, useSkills, useSaveBankDetails, useSaveDeliveryPreference,
+  useDeleteOwnAccount,
 } from "@/hooks/useData";
 import {
   Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState, Badge, Modal,
@@ -40,6 +41,7 @@ function PortalHeader({ youth }) {
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const menu = useDropdown();
   const initials = initialsOf(youth ? `${youth.first_name} ${youth.last_name}` : "");
 
@@ -120,12 +122,23 @@ function PortalHeader({ youth }) {
               </button>
             )}
             <div className="my-1 border-t" />
+            <p className="px-2.5 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Account</p>
             <button
               role="menuitem"
               onClick={signOut}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-destructive hover:bg-destructive/10"
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"
             >
               <LogOut className="h-4 w-4" /> Sign out
+            </button>
+            <button
+              role="menuitem"
+              onClick={() => {
+                setDeleteModalOpen(true);
+                menu.setOpen(false);
+              }}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" /> Delete account
             </button>
           </div>
         )}
@@ -148,6 +161,55 @@ function PortalHeader({ youth }) {
           <DeliveryPreferenceForm youth={youth} />
         </Modal>
       )}
+      <Modal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Delete account">
+        <DeleteAccountForm onCancel={() => setDeleteModalOpen(false)} />
+      </Modal>
+    </div>
+  );
+}
+
+function DeleteAccountForm({ onCancel }) {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const del = useDeleteOwnAccount();
+  const [confirmText, setConfirmText] = useState("");
+  const [error, setError] = useState("");
+
+  const canDelete = confirmText.trim().toUpperCase() === "DELETE";
+
+  const handleDelete = async () => {
+    if (!canDelete) return;
+    setError("");
+    try {
+      await del.mutateAsync();
+      // The account no longer exists, so the current session is dead — sign out
+      // client-side to clear it and send them back to the public homepage.
+      await signOut();
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
+        <p>
+          This permanently deletes your registration, photo, skills, banking and delivery details, funding
+          records, and sign-in — everything tied to your account. This cannot be undone.
+        </p>
+      </div>
+      <Field label={<>Type <span className="font-mono font-semibold">DELETE</span> to confirm</>}>
+        <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoComplete="off" />
+      </Field>
+      {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="button" variant="destructive" disabled={!canDelete} loading={del.isPending} onClick={handleDelete}>
+          <Trash2 className="h-4 w-4" /> Delete my account
+        </Button>
+      </div>
     </div>
   );
 }
@@ -157,6 +219,12 @@ function PhotoUpdateForm({ youth, onDone }) {
   const [preview, setPreview] = useState(youth?.photo_url ?? "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+
+  // The initial registration capture doesn't count against this — only retakes of an
+  // already-saved photo do, so a candidate gets 2 retakes total after that first save.
+  const retakesUsed = youth?.photo_url ? (youth.photo_update_count ?? 0) : 0;
+  const retakesLeft = Math.max(0, 2 - retakesUsed);
+  const locked = !!youth?.photo_url && retakesLeft === 0;
 
   const handlePhotoCapture = async (blob) => {
     setError("");
@@ -186,11 +254,20 @@ function PhotoUpdateForm({ youth, onDone }) {
         </div>
       )}
       <div className="space-y-1.5">
-        <WebcamCaptureButton
-          label={preview ? "Retake photo" : "Take photo"}
-          facingMode="user"
-          onCapture={handlePhotoCapture}
-        />
+        {locked ? (
+          <p className="text-xs font-medium text-muted-foreground">
+            You've used both photo retakes. Contact the programme team if you need this changed.
+          </p>
+        ) : (
+          <>
+            <WebcamCaptureButton
+              label={preview ? "Retake photo" : "Take photo"}
+              facingMode="user"
+              onCapture={handlePhotoCapture}
+            />
+            {preview && <p className="text-[11px] text-muted-foreground">{retakesLeft} retake{retakesLeft === 1 ? "" : "s"} left</p>}
+          </>
+        )}
         {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
