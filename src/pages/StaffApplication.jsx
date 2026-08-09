@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import {
-  LogOut, Send, Clock, XCircle, AlertTriangle, Camera, User, MapPin, ArrowLeft, Briefcase, ClipboardCheck,
+  LogOut, Send, Clock, XCircle, AlertTriangle, User, MapPin, ArrowLeft, Briefcase, ClipboardCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMyStaffApplication, useSubmitStaffApplication, useMyYouthRecord } from "@/hooks/useData";
 import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState } from "@/components/ui";
 import { Stepper } from "@/components/Stepper";
+import { WebcamCaptureButton } from "@/components/WebcamCapture";
 import {
   APPLICABLE_ROLES, ROLE_LABELS, KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS,
 } from "@/lib/utils";
@@ -142,15 +143,12 @@ function ApplyForm({ user }) {
     );
   };
 
-  const handlePhotoChange = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  const handlePhotoCapture = async (blob) => {
     setPhotoError("");
     setPhotoUploading(true);
     try {
       const path = `staff/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-      const { error } = await supabase.storage.from("youth-photos").upload(path, file, { contentType: file.type || "image/jpeg" });
+      const { error } = await supabase.storage.from("youth-photos").upload(path, blob, { contentType: "image/jpeg" });
       if (error) throw error;
       const { data } = supabase.storage.from("youth-photos").getPublicUrl(path);
       setForm((f) => ({ ...f, photo_url: data.publicUrl }));
@@ -243,11 +241,12 @@ function ApplyForm({ user }) {
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted">
-                    <Camera className="h-4 w-4" />
-                    {form.photo_url ? "Retake photo" : "Take / upload photo"}
-                    <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} disabled={photoUploading} />
-                  </label>
+                  <WebcamCaptureButton
+                    label={form.photo_url ? "Retake photo" : "Take photo"}
+                    facingMode="user"
+                    onCapture={handlePhotoCapture}
+                  />
+                  <p className="text-[11px] text-muted-foreground">Live camera only — uploading an existing photo isn't allowed.</p>
                   {photoUploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
                   {photoError && <p className="text-xs font-medium text-destructive">{photoError}</p>}
                 </div>
