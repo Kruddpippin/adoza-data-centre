@@ -50,7 +50,7 @@ export default function Landing() {
             <NavLink to="/login?portal=staff">Staff Login</NavLink>
           </nav>
 
-          <Link to="/login?portal=candidate">
+          <Link to="/check-status">
             <Button size="sm" className="rounded-full px-5">
               Check Status
             </Button>
