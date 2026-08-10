@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
@@ -600,6 +601,7 @@ const REGISTER_STEPS = [
 ];
 
 function SelfRegisterForm({ user }) {
+  const qc = useQueryClient();
   const { data: skillsCatalogue = [] } = useSkills();
   const save = useSaveYouth();
   // Keyed by user id so a draft never leaks between different people signing in on the
@@ -722,6 +724,18 @@ function SelfRegisterForm({ user }) {
       clearSkillsDraft();
       clearStepDraft();
     } catch (err) {
+      // The insert can succeed on the server but still surface as a client-side error —
+      // a network drop right as the response returns, realistic on the patchy mobile data
+      // this app targets. The retry's own insert then collides with the row that already
+      // exists (auth_user_id is unique). Treat that specific conflict as success — the
+      // candidate IS registered — rather than showing them a raw database error.
+      if (err.code === "23505" && err.message?.includes("youths_auth_user_id_key")) {
+        clearFormDraft();
+        clearSkillsDraft();
+        clearStepDraft();
+        await qc.invalidateQueries({ queryKey: ["my-youth-record"] });
+        return;
+      }
       setErrors((prev) => ({ ...prev, _root: err.message }));
     }
   };
@@ -985,13 +999,23 @@ function StaffEmailBlockedCard() {
 }
 
 export default function YouthPortal() {
+  const qc = useQueryClient();
   const { session, user, profile, loading: authLoading, profileLoading } = useAuth();
   const { data: record, isLoading, isError, refetch } = useMyYouthRecord(user?.id);
   const claim = useClaimYouthRecord();
 
   useEffect(() => {
     if (record && !record.auth_user_id && user?.id && !claim.isPending) {
-      claim.mutate({ id: record.id, userId: user.id });
+      claim.mutate(
+        { id: record.id, userId: user.id },
+        {
+          // A fire-and-forget mutate() with no error handling becomes an unhandled
+          // promise rejection if it fails — this can happen if the account already has
+          // a different youths row. Refetch either way so whichever row actually
+          // belongs to them ends up on screen instead of a silent/uncaught failure.
+          onError: () => qc.invalidateQueries({ queryKey: ["my-youth-record"] }),
+        }
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record?.id, record?.auth_user_id, user?.id]);
