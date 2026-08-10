@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
-  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2, Camera, User, AlertTriangle,
+  Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2, User, AlertTriangle,
   ArrowLeft, Flag, ClipboardCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -41,7 +41,6 @@ function PortalHeader({ youth }) {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
-  const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const menu = useDropdown();
   const initials = initialsOf(youth ? `${youth.first_name} ${youth.last_name}` : "");
@@ -78,16 +77,6 @@ function PortalHeader({ youth }) {
         </button>
         {menu.open && (
           <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border bg-card p-1.5 shadow-lg" role="menu">
-            <button
-              role="menuitem"
-              onClick={() => {
-                setPhotoModalOpen(true);
-                menu.setOpen(false);
-              }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"
-            >
-              <Camera className="h-4 w-4" /> {youth?.photo_url ? "Update photo" : "Add photo"}
-            </button>
             <button
               role="menuitem"
               onClick={() => {
@@ -146,9 +135,6 @@ function PortalHeader({ youth }) {
       </div>
       </div>
 
-      <Modal open={photoModalOpen} onClose={() => setPhotoModalOpen(false)} title={youth?.photo_url ? "Update photo" : "Add photo"} centered>
-        <PhotoUpdateForm youth={youth} onDone={() => setPhotoModalOpen(false)} />
-      </Modal>
       <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Password settings">
         <PasswordSettingsForm />
       </Modal>
@@ -210,67 +196,6 @@ function DeleteAccountForm({ onCancel }) {
         <Button type="button" variant="destructive" disabled={!canDelete} loading={del.isPending} onClick={handleDelete}>
           <Trash2 className="h-4 w-4" /> Delete my account
         </Button>
-      </div>
-    </div>
-  );
-}
-
-function PhotoUpdateForm({ youth, onDone }) {
-  const save = useSaveYouth();
-  const [preview, setPreview] = useState(youth?.photo_url ?? "");
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-
-  // The initial registration capture doesn't count against this — only retakes of an
-  // already-saved photo do, so a candidate gets 2 retakes total after that first save.
-  const retakesUsed = youth?.photo_url ? (youth.photo_update_count ?? 0) : 0;
-  const retakesLeft = Math.max(0, 2 - retakesUsed);
-  const locked = !!youth?.photo_url && retakesLeft === 0;
-
-  const handlePhotoCapture = async (blob) => {
-    setError("");
-    setUploading(true);
-    try {
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("youth-photos").upload(path, blob, { contentType: "image/jpeg" });
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from("youth-photos").getPublicUrl(path);
-      await save.mutateAsync({ id: youth.id, photo_url: data.publicUrl });
-      setPreview(data.publicUrl);
-      onDone();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-4">
-      {preview ? (
-        <img src={preview} alt="" className="h-16 w-16 rounded-lg object-cover" />
-      ) : (
-        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
-          <User className="h-6 w-6 text-muted-foreground" aria-hidden />
-        </div>
-      )}
-      <div className="space-y-1.5">
-        {locked ? (
-          <p className="text-xs font-medium text-muted-foreground">
-            You've used both photo retakes. Contact the programme team if you need this changed.
-          </p>
-        ) : (
-          <>
-            <WebcamCaptureButton
-              label={preview ? "Retake photo" : "Take photo"}
-              facingMode="user"
-              onCapture={handlePhotoCapture}
-            />
-            {preview && <p className="text-[11px] text-muted-foreground">{retakesLeft} retake{retakesLeft === 1 ? "" : "s"} left</p>}
-          </>
-        )}
-        {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
-        {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
     </div>
   );
