@@ -13,9 +13,13 @@ module.exports = {
         foreground: "hsl(150 15% 8%)",
         primary: { DEFAULT: "hsl(152 65% 22%)", foreground: "hsl(0 0% 100%)" },
         secondary: { DEFAULT: "hsl(150 25% 94%)", foreground: "hsl(152 65% 16%)" },
-        muted: { DEFAULT: "hsl(150 12% 96%)", foreground: "hsl(155 10% 44%)" },
+        // 37% (not 44%) — matches the web app's contrast fix; 44% measured ~4.46:1 on
+        // this project's background, just under the 4.5:1 AA floor for normal text.
+        muted: { DEFAULT: "hsl(150 12% 96%)", foreground: "hsl(155 10% 37%)" },
         accent: { DEFAULT: "hsl(43 90% 46%)", foreground: "hsl(43 80% 10%)" },
-        destructive: { DEFAULT: "hsl(0 84% 55%)", foreground: "hsl(0 0% 100%)" },
+        // 48% (not 55%) — matches the web app's contrast fix; 55% only reached ~4.2:1
+        // against white destructive-foreground text.
+        destructive: { DEFAULT: "hsl(0 84% 48%)", foreground: "hsl(0 0% 100%)" },
         card: { DEFAULT: "hsl(0 0% 100%)", foreground: "hsl(150 15% 8%)" },
       },
       borderRadius: {

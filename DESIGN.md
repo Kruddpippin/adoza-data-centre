@@ -12,8 +12,8 @@ colors:
   card-surface: "#ffffff"
   ink-foreground: "#111714"
   mist-muted: "#f4f6f5"
-  mist-muted-foreground: "#657b72"
-  signal-destructive: "#ed2c2c"
+  mist-muted-foreground: "#556860"
+  signal-destructive: "#e11414"
   hairline-border: "#e2e9e6"
   input-border: "#dce5e0"
   focus-ring: "#145d3b"
@@ -85,7 +85,7 @@ This system explicitly rejects generic SaaS marketing tropes (gradient-text hero
 - Warm near-white paper background (#fdfdfc), not stark white, not cream-drenched — subtle enough to read as neutral, not styled.
 - Bricolage Grotesque for anything that needs authority (page titles, stat values, hero type); Plus Jakarta Sans for everything functional (body copy, labels, form fields, table cells).
 - Soft, moderate radii (8–16px) everywhere; pill shape reserved for badges and status pills only.
-- Motion is a light touch: a 500ms fade-up on page-load content, nothing choreographed, nothing that costs a slow connection real time.
+- Motion is a light touch: a 500ms fade-up on page-load content, nothing choreographed, nothing that costs a slow connection real time. Easing is `cubic-bezier(0.22, 1, 0.36, 1)` (ease-out-quint, no overshoot) — calm authority reads as decisive deceleration, not a playful bounce.
 
 ## 2. Colors
 
@@ -104,9 +104,9 @@ A single committed brand color (forest green) carries authority; gold is used sp
 - **Paper Background** (#fdfdfc): Page background. Barely-warm off-white — read the hue, don't chase it; if it starts looking cream or parchment, pull it back toward this exact value.
 - **Card Surface** (#ffffff): True white, for every Card, Modal, and input surface sitting on the paper background — the one-step lift is what separates "container" from "page."
 - **Ink Foreground** (#111714): Body text, headings. A near-black with a whisper of green in it, never pure `#000`.
-- **Mist Muted** (#f4f6f5) / **Mist Muted Foreground** (#657b72): Muted backgrounds (empty states, subtle section fills) and secondary/caption text respectively.
+- **Mist Muted** (#f4f6f5) / **Mist Muted Foreground** (#556860): Muted backgrounds (empty states, subtle section fills) and secondary/caption text respectively. Foreground tuned to ~5.6:1 on paper-background — don't lighten past this without re-checking contrast; the original #657b72 measured ~4.46:1, just under the 4.5:1 AA floor for normal text.
 - **Hairline Border** (#e2e9e6): Card borders, table dividers, the one place structure is drawn with a line instead of a shadow.
-- **Signal Destructive** (#ed2c2c): Reject/revoke/delete actions and error text only.
+- **Signal Destructive** (#e11414): Reject/revoke/delete actions and error text only. Tuned so white destructive-foreground text holds ~4.9:1 (destructive buttons are font-medium, not bold, so the 3:1 large-text exemption doesn't apply) — the original #ed2c2c only reached ~4.2:1.
 
 ### Named Rules
 **The One Accent Rule.** Gold never fills more than one element per screen at full saturation. If a page already has a gold badge, its buttons stay green or neutral — gold does not repeat within the same view.
@@ -177,7 +177,8 @@ Flat by default. The system separates surfaces with a 1px hairline border (#e2e9
 - **Do** cap body copy width and use `text-wrap: balance` on headings (already global via `h1, h2, h3 { text-wrap: balance; }`).
 
 ### Don't:
-- **Don't** introduce SaaS marketing clichés on the landing page — no gradient-text hero, no glassmorphism cards, no hero-metric template, no identical-card grid — per PRODUCT.md's anti-references.
+- **Don't** introduce SaaS marketing clichés on the landing page — no gradient-text hero, no gradient section backgrounds (the auth pages and landing hero once carried a `primary → background → accent` wash; replaced with a flat `bg-primary/[0.04]` tint), no glassmorphism cards, no hero-metric template, no identical-card grid — per PRODUCT.md's anti-references.
+- **Don't** use a bounce/elastic/overshoot easing curve (a `cubic-bezier` with a value past 1 or below 0) — motion decelerates smoothly to a stop, per the Motion note in §1.
 - **Don't** copy any third-party programme's visual identity (imagery, wordmark, color) even when its page *layout* is the reference; the skin is always Adoza's own tokens.
 - **Don't** pair a visible 1px border with a wide (≥16px blur) resting box-shadow on the same card or button.
 - **Don't** exceed 16px corner radius on any card, section, or input. Full-pill radius is reserved for badges, status pills, and the "Check Status" nav button only.

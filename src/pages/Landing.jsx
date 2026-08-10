@@ -59,7 +59,7 @@ export default function Landing() {
       </header>
 
       <main>
-        <section className="bg-gradient-to-br from-primary/5 via-background to-accent/5 px-4 py-6 text-center sm:py-8">
+        <section className="bg-primary/[0.04] px-4 py-6 text-center sm:py-8">
           <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-muted-foreground">
             SYB Door-to-Door Youth Empowerment — Kogi Central
           </p>
