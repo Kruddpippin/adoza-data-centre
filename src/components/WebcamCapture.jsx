@@ -119,7 +119,7 @@ export function WebcamCaptureButton({ label, onCapture, facingMode = "user" }) {
             <p className="text-sm font-medium text-destructive">{error}</p>
           ) : (
             <>
-              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-black">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black">
                 <video
                   ref={videoRef}
                   autoPlay
