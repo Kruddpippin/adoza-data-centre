@@ -146,7 +146,7 @@ function PortalHeader({ youth }) {
       </div>
       </div>
 
-      <Modal open={photoModalOpen} onClose={() => setPhotoModalOpen(false)} title={youth?.photo_url ? "Update photo" : "Add photo"}>
+      <Modal open={photoModalOpen} onClose={() => setPhotoModalOpen(false)} title={youth?.photo_url ? "Update photo" : "Add photo"} centered>
         <PhotoUpdateForm youth={youth} onDone={() => setPhotoModalOpen(false)} />
       </Modal>
       <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Password settings">
