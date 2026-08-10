@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { UserCog } from "lucide-react";
 import { Button } from "@/components/ui";
 import { Footer } from "@/components/Footer";
 import { cn } from "@/lib/utils";
@@ -27,9 +28,9 @@ function NavLink({ to, state, active, children }) {
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
+      <header className="shrink-0 border-b bg-card">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5 lg:px-8">
           <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="ADOZA Data Centre home">
             <img
               src="/kogi-logo.png"
@@ -50,39 +51,48 @@ export default function Landing() {
             <NavLink to="/login?portal=staff">Staff Login</NavLink>
           </nav>
 
-          <Link to="/login?portal=candidate">
-            <Button size="sm" className="rounded-full px-5">
-              Check Status
-            </Button>
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            {/* The full nav (with Staff Login) is sm:flex-only above, so mobile needs its
+                own always-visible way in — otherwise staff have no login path on a phone. */}
+            <Link to="/login?portal=staff" className="sm:hidden">
+              <Button variant="outline" size="icon" aria-label="Staff Login">
+                <UserCog className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/login?portal=candidate">
+              <Button size="sm" className="rounded-full px-5">
+                Check Status
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main>
-        <section className="bg-primary/[0.04] px-4 py-6 text-center sm:py-8">
+      <main className="flex flex-1 flex-col justify-center overflow-y-auto">
+        <section className="bg-primary/[0.04] px-4 py-3 text-center sm:py-4">
           <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-muted-foreground">
             SYB Door-to-Door Youth Empowerment — Kogi Central
           </p>
-          <p className="animate-fade-up stagger-2 mt-2 text-base text-muted-foreground sm:text-lg">
+          <p className="animate-fade-up stagger-2 mt-1.5 text-base text-muted-foreground sm:text-lg">
             Registration is now open
           </p>
-          <div className="animate-fade-up stagger-3 mt-4">
+          <div className="animate-fade-up stagger-3 mt-3">
             <Link to="/login?portal=candidate">
               <Button size="lg">Apply Now</Button>
             </Link>
           </div>
         </section>
 
-        <section className="mx-auto max-w-3xl px-4 pb-6 sm:pb-8">
-          <div className="animate-fade-up stagger-2 rounded-xl border bg-card p-5 shadow-sm sm:p-7">
+        <section className="mx-auto w-full max-w-3xl px-4 py-3 sm:py-4">
+          <div className="animate-fade-up stagger-2 rounded-xl border bg-card p-4 shadow-sm sm:p-5">
             <h2 className="font-display text-xl font-bold tracking-tight text-primary underline decoration-2 underline-offset-4 sm:text-2xl">
               Registration Invitation
             </h2>
-            <p className="mt-3 text-sm text-foreground sm:text-base">
+            <p className="mt-2 text-sm text-foreground sm:text-base">
               All qualified Adoza youths are invited to register for the{" "}
               <strong className="font-semibold">2026 ADOZA Empowerment Programme</strong>.
             </p>
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-2 space-y-1.5">
               {REQUIREMENTS.map((r) => (
                 <li key={r} className="flex items-start gap-2.5 text-sm sm:text-base">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
@@ -90,7 +100,7 @@ export default function Landing() {
                 </li>
               ))}
             </ul>
-            <Link to="/login?portal=candidate" className="mt-5 block sm:inline-block">
+            <Link to="/login?portal=candidate" className="mt-4 block sm:inline-block">
               <Button size="lg" className="w-full sm:w-auto">Apply Now</Button>
             </Link>
           </div>
