@@ -142,7 +142,7 @@ export function WebcamCaptureButton({ label, onCapture, facingMode = "user" }) {
                     line their face up inside it before capturing. */}
                 {ready && (
                   <div
-                    className="pointer-events-none absolute left-1/2 top-1/2 h-[78%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-2 border-white/80"
+                    className="pointer-events-none absolute left-1/2 top-1/2 h-[62%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/80"
                     style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }}
                     aria-hidden
                   />
