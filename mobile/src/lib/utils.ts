@@ -75,6 +75,24 @@ export const ID_TYPES = [
   { value: "drivers_license", label: "Driver's License" },
 ];
 
+// Format checks only — confirms a government ID number is shaped correctly, not that
+// it's genuinely registered to that person. No accessible NIMC/INEC API exists for real
+// verification at point of entry. NIN and voters_card formats are well-documented; passport
+// and drivers_license are looser since the exact official format is less certain.
+export const ID_FORMATS: Record<string, { regex: RegExp; hint: string }> = {
+  nin: { regex: /^[0-9]{11}$/, hint: "11 digits" },
+  voters_card: { regex: /^[0-9]{19}$/, hint: "19 digits — the VIN printed on the front of the card" },
+  passport: { regex: /^[A-Z]{1,2}[0-9]{7,8}$/i, hint: "1-2 letters followed by 7-8 digits" },
+  drivers_license: { regex: /^[A-Z0-9]{8,16}$/i, hint: "8-16 letters/numbers" },
+};
+
+export const isValidGovernmentId = (type: string | null | undefined, value: string | null | undefined) => {
+  const v = (value ?? "").trim();
+  if (!v) return false;
+  const fmt = type ? ID_FORMATS[type] : undefined;
+  return fmt ? fmt.regex.test(v) : true;
+};
+
 export const DELIVERY_METHOD_LABELS: Record<string, string> = {
   home_address: "Deliver to home address",
   custom_address: "Deliver to a different address",

@@ -10,7 +10,7 @@ import { Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, Ca
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, isAdminRole } from "@/lib/utils";
+import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, ID_FORMATS, isValidGovernmentId, isAdminRole } from "@/lib/utils";
 
 const EMPTY = {
   photo_url: "", first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
@@ -135,6 +135,14 @@ export default function YouthForm() {
     if (i === 1) {
       if (!form.ward.trim()) e.ward = "Required";
       if (!form.lga) e.lga = "Required";
+    }
+    if (i === 2) {
+      if (form.government_id.trim() && !form.government_id_type) {
+        e.government_id_type = "Select the ID type first";
+      } else if (form.government_id.trim() && !isValidGovernmentId(form.government_id_type, form.government_id)) {
+        const label = ID_TYPES.find((t) => t.value === form.government_id_type)?.label ?? "ID number";
+        e.government_id = `Doesn't look like a valid ${label} — expected ${ID_FORMATS[form.government_id_type]?.hint}`;
+      }
     }
     if (i === 4) {
       if (!form.consent_given) e.consent_given = "Consent is required to register";
@@ -314,13 +322,17 @@ export default function YouthForm() {
           <Card className="animate-fade-up">
             <CardHeader><CardTitle>Citizenship Identification</CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Field label="Means of Identification">
+              <Field label="Means of Identification" error={errors.government_id_type}>
                 <Select value={form.government_id_type} onChange={set("government_id_type")}>
                   <option value="">Select Identification…</option>
                   {ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </Field>
-              <Field label="Document Number">
+              <Field
+                label="Document Number"
+                error={errors.government_id}
+                hint={form.government_id_type ? ID_FORMATS[form.government_id_type]?.hint : undefined}
+              >
                 <Input value={form.government_id} onChange={set("government_id")} placeholder="Document Number" />
               </Field>
             </CardContent>

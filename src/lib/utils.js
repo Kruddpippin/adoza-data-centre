@@ -125,6 +125,26 @@ export const NIGERIAN_BANKS = [
 // NUBAN — Nigeria's standard account number format: exactly 10 digits.
 export const isValidNuban = (accountNumber) => /^[0-9]{10}$/.test((accountNumber ?? "").trim());
 
+// Format checks only — these confirm a government ID number is shaped correctly, not
+// that it's genuinely registered to that person. We can't verify against NIMC/INEC at
+// point of entry (no accessible API for either without a paid KYC integration), so this
+// is a first line of defense against typos/garbage, not real identity verification.
+// NIN and voters_card formats are well-documented and consistent across sources; passport
+// and drivers_license are looser because the exact official format is less certain.
+export const ID_FORMATS = {
+  nin: { regex: /^[0-9]{11}$/, hint: "11 digits" },
+  voters_card: { regex: /^[0-9]{19}$/, hint: "19 digits — the VIN printed on the front of the card" },
+  passport: { regex: /^[A-Z]{1,2}[0-9]{7,8}$/i, hint: "1-2 letters followed by 7-8 digits" },
+  drivers_license: { regex: /^[A-Z0-9]{8,16}$/i, hint: "8-16 letters/numbers" },
+};
+
+export const isValidGovernmentId = (type, value) => {
+  const v = (value ?? "").trim();
+  if (!v) return false;
+  const fmt = ID_FORMATS[type];
+  return fmt ? fmt.regex.test(v) : true;
+};
+
 export const DELIVERY_METHOD_LABELS = {
   home_address: "Deliver to my home address",
   custom_address: "Deliver to a different address",

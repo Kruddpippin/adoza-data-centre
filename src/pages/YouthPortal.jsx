@@ -21,7 +21,7 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import { PasswordSettingsForm } from "@/components/PasswordSettingsForm";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
-  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, ID_TYPES, formatDate, formatNaira, initialsOf, cn,
+  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, ID_TYPES, ID_FORMATS, isValidGovernmentId, formatDate, formatNaira, initialsOf, cn,
 } from "@/lib/utils";
 
 function InfoRow({ icon: Icon, label, value }) {
@@ -673,6 +673,14 @@ function SelfRegisterForm({ user }) {
       if (!form.ward) e.ward = "Required";
       if (!form.lga) e.lga = "Required";
     }
+    if (i === 2) {
+      if (form.government_id.trim() && !form.government_id_type) {
+        e.government_id_type = "Select the ID type first";
+      } else if (form.government_id.trim() && !isValidGovernmentId(form.government_id_type, form.government_id)) {
+        const label = ID_TYPES.find((t) => t.value === form.government_id_type)?.label ?? "ID number";
+        e.government_id = `Doesn't look like a valid ${label} — expected ${ID_FORMATS[form.government_id_type]?.hint}`;
+      }
+    }
     if (i === 4) {
       if (!form.consent_given) e.consent_given = "Consent is required to register";
     }
@@ -823,13 +831,17 @@ function SelfRegisterForm({ user }) {
           <Card>
             <CardHeader><CardTitle>Citizenship Identification</CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Field label="Means of Identification">
+              <Field label="Means of Identification" error={errors.government_id_type}>
                 <Select value={form.government_id_type} onChange={set("government_id_type")}>
                   <option value="">Select Identification…</option>
                   {ID_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
               </Field>
-              <Field label="Document Number">
+              <Field
+                label="Document Number"
+                error={errors.government_id}
+                hint={form.government_id_type ? ID_FORMATS[form.government_id_type]?.hint : undefined}
+              >
                 <Input value={form.government_id} onChange={set("government_id")} placeholder="Document Number" />
               </Field>
             </CardContent>

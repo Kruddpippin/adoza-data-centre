@@ -12,7 +12,7 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import { supabase } from "@/lib/supabase";
 import { Button, Card, Field, Input, Spinner } from "@/components/ui";
 import { SelectField } from "@/components/select-modal";
-import { EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, KOGI_LGAS, KOGI_WARDS_BY_LGA, isAdminRole } from "@/lib/utils";
+import { EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, ID_FORMATS, isValidGovernmentId, KOGI_LGAS, KOGI_WARDS_BY_LGA, isAdminRole } from "@/lib/utils";
 
 const EMPTY = {
   photo_url: "",
@@ -172,6 +172,12 @@ export function YouthForm({ youthId }: { youthId?: string }) {
     else if (!/^\+?[\d\s-]{10,15}$/.test(form.phone.trim())) e.phone = "Enter a valid phone number";
     if (!form.ward.trim()) e.ward = "Required";
     if (!form.lga) e.lga = "Required";
+    if (form.government_id.trim() && !form.government_id_type) {
+      e.government_id_type = "Select the ID type first";
+    } else if (form.government_id.trim() && !isValidGovernmentId(form.government_id_type, form.government_id)) {
+      const label = ID_TYPES.find((t) => t.value === form.government_id_type)?.label ?? "ID number";
+      e.government_id = `Doesn't look like a valid ${label} — expected ${ID_FORMATS[form.government_id_type]?.hint}`;
+    }
     if (!form.consent_given) e.consent_given = "Consent is required to register";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -295,7 +301,7 @@ export function YouthForm({ youthId }: { youthId?: string }) {
         <Field label="Email">
           <Input value={form.email} onChangeText={(v) => set("email")(v)} keyboardType="email-address" autoCapitalize="none" />
         </Field>
-        <Field label="Means of Identification">
+        <Field label="Means of Identification" error={errors.government_id_type}>
           <SelectField
             label="Means of Identification"
             value={form.government_id_type}
@@ -304,8 +310,12 @@ export function YouthForm({ youthId }: { youthId?: string }) {
             options={ID_TYPES}
           />
         </Field>
-        <Field label="Document Number">
-          <Input value={form.government_id} onChangeText={(v) => set("government_id")(v)} placeholder="Document Number" />
+        <Field label="Document Number" error={errors.government_id}>
+          <Input
+            value={form.government_id}
+            onChangeText={(v) => set("government_id")(v)}
+            placeholder={form.government_id_type ? ID_FORMATS[form.government_id_type]?.hint : "Document Number"}
+          />
         </Field>
         <Field label="Highest education">
           <SelectField
