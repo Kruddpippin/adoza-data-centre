@@ -27,6 +27,12 @@ export function Footer() {
           <Link to="/about" className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline">
             About
           </Link>
+          <Link to="/faq" className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline">
+            FAQ
+          </Link>
+          <Link to="/contact" className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline">
+            Contact &amp; Feedback
+          </Link>
           <Link to="/privacy-policy" className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline">
             Privacy Policy
           </Link>

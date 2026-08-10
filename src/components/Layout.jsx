@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, NavLink, Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Map, Award, Package, Banknote, ClipboardList,
-  UserCog, Shield, Menu, X, LogOut, KeyRound, Smartphone, Megaphone,
+  UserCog, Shield, Menu, X, LogOut, KeyRound, Smartphone, Megaphone, Inbox,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { NotificationsBell, useDropdown } from "@/components/NotificationsBell";
@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { path: "/surveys", label: "Surveys", icon: ClipboardList, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
   { path: "/users", label: "Team", icon: UserCog, roles: ADMIN_ROLES },
   { path: "/broadcast", label: "Broadcast", icon: Megaphone, roles: ADMIN_ROLES },
+  { path: "/feedback", label: "Feedback", icon: Inbox, roles: ADMIN_ROLES },
   { path: "/audit", label: "Audit Log", icon: Shield, roles: ADMIN_ROLES },
 ];
 

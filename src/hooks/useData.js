@@ -382,6 +382,51 @@ export function useAuditLog() {
   });
 }
 
+/* ============ feedback ============ */
+// Public submit — no auth required, so this deliberately doesn't touch React Query's
+// cache (there's nothing a signed-out visitor could usefully invalidate/refetch here).
+// Deliberately no .select() here: the SELECT policy on this table is admin-only, and
+// Postgres RLS requires INSERT...RETURNING to also pass the SELECT policy — an anon
+// submitter can insert but can't read the row back, so we don't ask for it.
+export function useSubmitFeedback() {
+  return useMutation({
+    mutationFn: (values) => run(supabase.from("feedback_messages").insert(values)),
+  });
+}
+
+export function useFeedbackMessages() {
+  return useQuery({
+    queryKey: ["feedback-messages"],
+    queryFn: () =>
+      run(
+        supabase
+          .from("feedback_messages")
+          .select("*, resolver:profiles!feedback_messages_resolved_by_fkey(name)")
+          .order("created_at", { ascending: false })
+      ),
+  });
+}
+
+export function useUpdateFeedbackStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status, resolvedBy }) =>
+      run(
+        supabase
+          .from("feedback_messages")
+          .update({
+            status,
+            resolved_by: status === "resolved" ? resolvedBy : null,
+            resolved_at: status === "resolved" ? new Date().toISOString() : null,
+          })
+          .eq("id", id)
+          .select()
+          .single()
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["feedback-messages"] }),
+  });
+}
+
 /* ============ dashboard ============ */
 export function useDashboardData() {
   return useQuery({

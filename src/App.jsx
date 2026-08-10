@@ -20,6 +20,8 @@ function NotFoundRedirect() {
 
 const Landing = lazy(() => import("@/pages/Landing"));
 const About = lazy(() => import("@/pages/About"));
+const FAQ = lazy(() => import("@/pages/FAQ"));
+const Contact = lazy(() => import("@/pages/Contact"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const TermsOfConditions = lazy(() => import("@/pages/TermsOfConditions"));
 const Login = lazy(() => import("@/pages/Login"));
@@ -39,6 +41,7 @@ const FieldMap = lazy(() => import("@/pages/FieldMap"));
 const Team = lazy(() => import("@/pages/Team"));
 const Broadcast = lazy(() => import("@/pages/Broadcast"));
 const Audit = lazy(() => import("@/pages/Audit"));
+const Feedback = lazy(() => import("@/pages/Feedback"));
 
 export default function App() {
   return (
@@ -47,6 +50,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/about" element={<About />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-conditions" element={<TermsOfConditions />} />
           <Route path="/login" element={<Login />} />
@@ -114,6 +119,14 @@ export default function App() {
               element={
                 <ProtectedRoute roles={ADMIN_ROLES}>
                   <Audit />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/feedback"
+              element={
+                <ProtectedRoute roles={ADMIN_ROLES}>
+                  <Feedback />
                 </ProtectedRoute>
               }
             />
