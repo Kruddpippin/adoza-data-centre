@@ -119,13 +119,20 @@ export function WebcamCaptureButton({ label, onCapture, facingMode = "user" }) {
             <p className="text-sm font-medium text-destructive">{error}</p>
           ) : (
             <>
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black">
+              {/* Portrait 3:4 frame via the padding-percentage trick (not the CSS aspect-ratio
+                  property) so this renders correctly on older Android WebViews too — some budget
+                  devices in the field don't support aspect-ratio and would silently fall back to
+                  a collapsed/landscape box. */}
+              <div className="relative w-full max-w-xs mx-auto overflow-hidden rounded-lg bg-black" style={{ paddingTop: "133.333%" }}>
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className={cn("h-full w-full object-cover", activeFacing === "user" && "[transform:scaleX(-1)]")}
+                  className={cn(
+                    "absolute inset-0 h-full w-full object-cover",
+                    activeFacing === "user" && "[transform:scaleX(-1)]"
+                  )}
                 />
                 {!ready && (
                   <div className="absolute inset-0 flex items-center justify-center text-xs text-white/70">Starting camera…</div>
