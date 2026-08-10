@@ -1,4 +1,5 @@
 import { forwardRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, Inbox, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -245,7 +246,7 @@ export function Modal({ open, onClose, title, children, wide = false, centered =
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div
       className={cn("fixed inset-0 z-50 flex justify-center", centered ? "items-center" : "items-end sm:items-center")}
       role="dialog"
@@ -268,7 +269,8 @@ export function Modal({ open, onClose, title, children, wide = false, centered =
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
