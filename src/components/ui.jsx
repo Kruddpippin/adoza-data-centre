@@ -232,7 +232,7 @@ export function ErrorState({ message = "Something went wrong loading data.", onR
 }
 
 /* ---------------- Modal ---------------- */
-export function Modal({ open, onClose, title, children, wide = false }) {
+export function Modal({ open, onClose, title, children, wide = false, centered = false }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === "Escape" && onClose();
@@ -246,11 +246,17 @@ export function Modal({ open, onClose, title, children, wide = false }) {
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      className={cn("fixed inset-0 z-50 flex justify-center", centered ? "items-center" : "items-end sm:items-center")}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
       <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={onClose} aria-hidden />
       <div
         className={cn(
-          "animate-scale-in relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl",
+          "animate-scale-in relative z-10 max-h-[92vh] w-full overflow-y-auto bg-card p-5 shadow-xl",
+          centered ? "rounded-2xl" : "rounded-t-2xl sm:rounded-2xl",
           wide ? "sm:max-w-2xl" : "sm:max-w-md"
         )}
       >

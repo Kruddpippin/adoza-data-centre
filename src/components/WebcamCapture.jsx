@@ -113,7 +113,7 @@ export function WebcamCaptureButton({ label, onCapture, facingMode = "user" }) {
         {label}
       </button>
 
-      <Modal open={open} onClose={close} title="Take photo">
+      <Modal open={open} onClose={close} title="Take photo" centered>
         <div className="space-y-3">
           {error ? (
             <p className="text-sm font-medium text-destructive">{error}</p>
