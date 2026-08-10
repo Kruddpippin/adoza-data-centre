@@ -81,7 +81,7 @@ export const ID_TYPES = [
 // and drivers_license are looser since the exact official format is less certain.
 export const ID_FORMATS: Record<string, { regex: RegExp; hint: string }> = {
   nin: { regex: /^[0-9]{11}$/, hint: "11 digits" },
-  voters_card: { regex: /^[0-9]{19}$/, hint: "19 digits — the VIN printed on the front of the card" },
+  voters_card: { regex: /^[A-Z0-9]{19}$/i, hint: "19 characters — the VIN printed on the front of the card (starts with letters, e.g. INC)" },
   passport: { regex: /^[A-Z]{1,2}[0-9]{7,8}$/i, hint: "1-2 letters followed by 7-8 digits" },
   drivers_license: { regex: /^[A-Z0-9]{8,16}$/i, hint: "8-16 letters/numbers" },
 };
