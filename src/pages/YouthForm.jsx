@@ -159,6 +159,7 @@ export default function YouthForm() {
 
   const submit = async (e) => {
     e.preventDefault();
+    setErrors({});
     // Guard every step, in case an earlier one was skipped past (e.g. browser back/forward).
     for (let i = 0; i < STEPS.length; i++) {
       if (!validateStep(i)) {

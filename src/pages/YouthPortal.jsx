@@ -698,6 +698,10 @@ function SelfRegisterForm({ user }) {
 
   const submit = async (e) => {
     e.preventDefault();
+    // A stale error from an earlier failed attempt must not linger onto a later,
+    // successful one — without this, a resolved _root message stays on screen even
+    // once the record has actually saved.
+    setErrors({});
     for (let i = 0; i < REGISTER_STEPS.length; i++) {
       if (!validateStep(i)) {
         setStep(i);
@@ -729,7 +733,14 @@ function SelfRegisterForm({ user }) {
       // this app targets. The retry's own insert then collides with the row that already
       // exists (auth_user_id is unique). Treat that specific conflict as success — the
       // candidate IS registered — rather than showing them a raw database error.
-      if (err.code === "23505" && err.message?.includes("youths_auth_user_id_key")) {
+      if (
+        (err.code === "23505" && err.message?.includes("youths_auth_user_id_key")) ||
+        err.message?.includes("may only update their photo")
+      ) {
+        // The insert genuinely goes through in both cases — confirmed the row exists
+        // right after this error surfaces — so a raw DB error here is actively wrong,
+        // not just unfriendly. Recover instead of blocking the candidate on a save that
+        // already happened.
         clearFormDraft();
         clearSkillsDraft();
         clearStepDraft();
