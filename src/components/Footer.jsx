@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 function BuiltByBadge() {
   return (
     <a
-      href="https://kruddpippin-dev.vercel.app/"
+      href="https://signal-labs-co.vercel.app/"
       target="_blank"
       rel="noreferrer"
       aria-label="Built by Signal Labs"
