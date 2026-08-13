@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   LogOut, Wrench, KeyRound, CheckCircle2, Circle, Landmark, Truck, CalendarClock,
   Phone, Mail, MapPin, GraduationCap, Briefcase, ShieldCheck, Plus, Trash2, User, AlertTriangle,
-  ArrowLeft, Flag, ClipboardCheck,
+  ArrowLeft, Flag, ClipboardCheck, MessageCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -509,6 +509,24 @@ function RegistrationSummaryCard({ youth }) {
   );
 }
 
+const SENATOR_WHATSAPP_URL = "https://wa.me/2349037025921";
+
+function ChatSenatorCard() {
+  return (
+    <Card className="border-primary/30 bg-primary/5">
+      <CardHeader><CardTitle>Need help?</CardTitle></CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <p className="text-muted-foreground">
+          Chat directly with your senator on WhatsApp for support or questions about the programme.
+        </p>
+        <Button href={SENATOR_WHATSAPP_URL} target="_blank" rel="noreferrer" className="w-full">
+          <MessageCircle className="h-4 w-4" /> Chat your senator
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 function StatusView({ youth }) {
   const meta = VERIFICATION_META[youth.verification_status];
   const showBankForm = youth.verification_status === "verified";
@@ -541,6 +559,8 @@ function StatusView({ youth }) {
                 : "Your registration is awaiting review by the programme team."}
         </p>
       </Card>
+
+      <ChatSenatorCard />
 
       <JourneyProgress youth={youth} />
 

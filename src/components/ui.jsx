@@ -20,21 +20,26 @@ const buttonSizes = {
 };
 
 export const Button = forwardRef(function Button(
-  { className, variant = "default", size = "default", loading = false, children, disabled, ...props },
+  { className, variant = "default", size = "default", loading = false, children, disabled, href, ...props },
   ref
 ) {
+  const classes = cn(
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+    buttonVariants[variant],
+    buttonSizes[size],
+    className
+  );
+
+  if (href) {
+    return (
+      <a ref={ref} href={href} className={classes} {...props}>
+        {children}
+      </a>
+    );
+  }
+
   return (
-    <button
-      ref={ref}
-      disabled={disabled || loading}
-      className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        buttonVariants[variant],
-        buttonSizes[size],
-        className
-      )}
-      {...props}
-    >
+    <button ref={ref} disabled={disabled || loading} className={classes} {...props}>
       {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
       {children}
     </button>
