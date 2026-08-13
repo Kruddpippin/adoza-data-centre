@@ -511,19 +511,18 @@ function RegistrationSummaryCard({ youth }) {
 
 const SENATOR_WHATSAPP_URL = "https://wa.me/2349037025921";
 
-function ChatSenatorCard() {
+function ChatSenatorBubble() {
   return (
-    <Card className="border-primary/30 bg-primary/5">
-      <CardHeader><CardTitle>Need help?</CardTitle></CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <p className="text-muted-foreground">
-          Chat directly with your senator on WhatsApp for support or questions about the programme.
-        </p>
-        <Button href={SENATOR_WHATSAPP_URL} target="_blank" rel="noreferrer" className="w-full">
-          <MessageCircle className="h-4 w-4" /> Chat your senator
-        </Button>
-      </CardContent>
-    </Card>
+    <a
+      href={SENATOR_WHATSAPP_URL}
+      target="_blank"
+      rel="noreferrer"
+      aria-label="Chat your senator on WhatsApp"
+      title="Chat your senator on WhatsApp"
+      className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:bg-primary/90 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+      <MessageCircle className="h-6 w-6" />
+    </a>
   );
 }
 
@@ -559,8 +558,6 @@ function StatusView({ youth }) {
                 : "Your registration is awaiting review by the programme team."}
         </p>
       </Card>
-
-      <ChatSenatorCard />
 
       <JourneyProgress youth={youth} />
 
@@ -1057,19 +1054,22 @@ export default function YouthPortal() {
   if (!session) return <Navigate to="/login?portal=candidate" replace />;
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl p-4 lg:p-8">
-      <PortalHeader youth={record} />
-      {isLoading || profileLoading ? (
-        <Spinner />
-      ) : isError ? (
-        <ErrorState onRetry={refetch} />
-      ) : record ? (
-        <StatusView youth={record} />
-      ) : profile ? (
-        <StaffEmailBlockedCard />
-      ) : (
-        <SelfRegisterForm user={user} />
-      )}
-    </div>
+    <>
+      <div className="mx-auto min-h-screen max-w-2xl p-4 lg:p-8">
+        <PortalHeader youth={record} />
+        {isLoading || profileLoading ? (
+          <Spinner />
+        ) : isError ? (
+          <ErrorState onRetry={refetch} />
+        ) : record ? (
+          <StatusView youth={record} />
+        ) : profile ? (
+          <StaffEmailBlockedCard />
+        ) : (
+          <SelfRegisterForm user={user} />
+        )}
+      </div>
+      {record?.verification_status === "verified" && <ChatSenatorBubble />}
+    </>
   );
 }
