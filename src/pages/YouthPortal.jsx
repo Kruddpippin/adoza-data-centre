@@ -509,7 +509,7 @@ function RegistrationSummaryCard({ youth }) {
   );
 }
 
-const SENATOR_WHATSAPP_URL = "https://wa.me/2349037025921";
+const SENATOR_WHATSAPP_URL = "https://wa.me/2347014280380";
 
 function ChatSenatorBubble() {
   return (
