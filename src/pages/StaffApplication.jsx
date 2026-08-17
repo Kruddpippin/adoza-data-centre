@@ -26,7 +26,7 @@ function PortalHeader() {
   return (
     <div className="mb-6 flex items-center justify-between">
       <div className="flex items-center gap-2.5">
-        <img src="/kogi-logo.png" alt="Kogi State Government" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
+        <img src="/kogi-logo.png" alt="ADOZA Data Centre" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
         <div>
           <p className="font-display text-sm font-bold tracking-tight">ADOZA Data Centre</p>
           <p className="text-[11px] text-muted-foreground">Staff application</p>

@@ -52,7 +52,7 @@ function PortalHeader({ youth }) {
   return (
     <div className="mb-6 flex items-center justify-between">
       <Link to={session ? "/my-registration" : "/login"} className="flex items-center gap-2.5">
-        <img src="/kogi-logo.png" alt="Kogi State Government" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
+        <img src="/kogi-logo.png" alt="ADOZA Data Centre" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
         <div>
           <p className="font-display text-sm font-bold tracking-tight">
             {youth ? `${youth.first_name} ${youth.last_name}` : "ADOZA Data Centre"}

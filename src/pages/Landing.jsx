@@ -34,7 +34,7 @@ export default function Landing() {
           <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="ADOZA Data Centre home">
             <img
               src="/kogi-logo.png"
-              alt="Kogi State Government"
+              alt="ADOZA Data Centre"
               width={36}
               height={36}
               decoding="async"

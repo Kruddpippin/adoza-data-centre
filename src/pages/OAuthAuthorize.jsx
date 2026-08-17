@@ -125,7 +125,7 @@ export default function OAuthAuthorize() {
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
           <img
             src="/kogi-logo.png"
-            alt="Kogi State Government"
+            alt="ADOZA Data Centre"
             width={48}
             height={48}
             className="h-12 w-12 rounded-full object-cover shadow-lg"

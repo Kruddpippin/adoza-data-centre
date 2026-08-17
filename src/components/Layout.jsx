@@ -61,7 +61,7 @@ export function Layout() {
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5">
             <img
               src="/kogi-logo.png"
-              alt="Kogi State Government"
+              alt="ADOZA Data Centre"
               width={32}
               height={32}
               decoding="async"

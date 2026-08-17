@@ -467,7 +467,7 @@ export default function Login() {
           <Link to="/" aria-label="ADOZA Data Centre home">
             <img
               src="/kogi-logo.png"
-              alt="Kogi State Government"
+              alt="ADOZA Data Centre"
               width={56}
               height={56}
               fetchpriority="high"
