@@ -24,8 +24,20 @@ export function AuthProvider({ children }) {
       return;
     }
     setProfileLoading(true);
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    setProfile(data ?? null);
+    const fetchProfile = () => supabase.from("profiles").select("*").eq("id", userId).single();
+    let { data, error } = await fetchProfile();
+    // PGRST116 ("no rows") from .single() is the expected, genuine signal that this
+    // account has no profile — every candidate account, by design. Any OTHER error
+    // (a transient network blip, a slow connection, a momentary 5xx) must not be read
+    // the same way: doing so was silently mislabeling real staff accounts as "not
+    // staff" right after a successful login, which Login.jsx's portal-mismatch check
+    // then treated as reason enough to force a sign-out. One retry turns "any single
+    // hiccup logs a staff member out" into "needs two in a row", without changing
+    // anything for the ordinary no-profile-at-all case.
+    if (error && error.code !== "PGRST116") {
+      ({ data, error } = await fetchProfile());
+    }
+    setProfile(error && error.code !== "PGRST116" ? null : data ?? null);
     setProfileLoading(false);
   }, []);
 
@@ -41,7 +53,14 @@ export function AuthProvider({ children }) {
       })
       .finally(() => active && setLoading(false));
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, next) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, next) => {
+      // A null session on anything other than a genuine SIGNED_OUT is a transient
+      // event, not a real logout (e.g. an intermediate auth-state notification firing
+      // before an OAuth redirect's session has fully landed) — trusting it blindly
+      // flickered a just-completed sign-in back to signed-out. Only SIGNED_OUT (an
+      // explicit signOut() call, or Supabase's own idle/refresh-failure handling)
+      // should ever actually clear the session here.
+      if (!next && event !== "SIGNED_OUT") return;
       setSession(next);
       await loadProfile(next?.user?.id);
     });
