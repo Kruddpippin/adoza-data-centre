@@ -1,5 +1,6 @@
 import { forwardRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import { Loader2, Inbox, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,7 @@ const buttonSizes = {
 };
 
 export const Button = forwardRef(function Button(
-  { className, variant = "default", size = "default", loading = false, children, disabled, href, ...props },
+  { className, variant = "default", size = "default", loading = false, children, disabled, href, to, ...props },
   ref
 ) {
   const classes = cn(
@@ -29,6 +30,16 @@ export const Button = forwardRef(function Button(
     buttonSizes[size],
     className
   );
+
+  // Client-side route navigation (in-app), as opposed to `href` which is a plain <a>
+  // for external links/downloads.
+  if (to) {
+    return (
+      <Link ref={ref} to={to} className={classes} {...props}>
+        {children}
+      </Link>
+    );
+  }
 
   if (href) {
     return (
@@ -157,6 +168,22 @@ export function StatCard({ icon: Icon, label, value, sub, tone = "primary", clas
         )}
       </div>
     </Card>
+  );
+}
+
+/* ---------------- ProgressBar ---------------- */
+export function ProgressBar({ value = 0, className }) {
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div
+      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-muted", className)}
+      role="progressbar"
+      aria-valuenow={pct}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${pct}%` }} />
+    </div>
   );
 }
 

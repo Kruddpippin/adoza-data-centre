@@ -54,10 +54,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div>
-          <Skeleton className="h-6 w-56" />
-          <Skeleton className="mt-2 h-4 w-72" />
-        </div>
+        <Skeleton className="h-32 w-full rounded-xl lg:h-52" />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6 lg:gap-4">
           {Array.from({ length: 6 }).map((_, i) => <StatCardSkeleton key={i} />)}
         </div>
@@ -72,11 +69,26 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="animate-fade-up">
-        <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">
-          Welcome back, {profile?.name?.split(" ")[0] ?? "there"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">Programme snapshot across Kogi State.</p>
+      <div className="animate-fade-up overflow-hidden rounded-xl border bg-card">
+        <div className="flex flex-col lg:flex-row lg:items-stretch">
+          <div className="flex flex-col justify-center gap-1.5 bg-primary px-5 py-6 lg:w-[320px] lg:shrink-0 lg:px-8">
+            <h1 className="font-display text-xl font-bold tracking-tight text-primary-foreground lg:text-2xl">
+              Welcome back, {profile?.name?.split(" ")[0] ?? "there"}
+            </h1>
+            <p className="text-sm text-primary-foreground/80">Programme snapshot across Kogi State.</p>
+          </div>
+          <div className="relative h-32 lg:h-auto lg:flex-1">
+            <img
+              src="/img/dashboard-welcome.webp"
+              alt=""
+              aria-hidden="true"
+              fetchPriority="high"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover object-[center_28%]"
+            />
+            <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-20 bg-gradient-to-r from-primary to-transparent lg:block" />
+          </div>
+        </div>
       </div>
 
       {/* Stat cards */}

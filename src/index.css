@@ -113,3 +113,12 @@
 
 /* ---------- leaflet fixes ---------- */
 .leaflet-container { border-radius: var(--radius); z-index: 0; }
+
+/* ---------- certificate printing ---------- */
+/* Used by CertificateView: hides the whole app (including the modal chrome it sits
+   inside) and prints only the certificate itself, full-page. */
+@media print {
+  body * { visibility: hidden; }
+  .certificate-print-area, .certificate-print-area * { visibility: visible; }
+  .certificate-print-area { position: fixed; inset: 0; padding: 32px; border: none !important; }
+}

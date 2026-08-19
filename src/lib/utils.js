@@ -59,6 +59,20 @@ export const VERIFICATION_META = {
   flagged:  { label: "Flagged",  cls: "bg-orange-100 text-orange-700" },
 };
 
+export const COURSE_STATUS_META = {
+  not_started: { label: "Not started", cls: "bg-muted text-muted-foreground" },
+  in_progress: { label: "In progress", cls: "bg-amber-100 text-amber-700" },
+  completed: { label: "Completed", cls: "bg-emerald-100 text-emerald-700" },
+};
+
+export const APPLICATION_STATUS_META = {
+  pending: { label: "Pending", cls: "bg-amber-100 text-amber-700" },
+  shortlisted: { label: "Shortlisted", cls: "bg-blue-100 text-blue-700" },
+  accepted: { label: "Accepted", cls: "bg-emerald-100 text-emerald-700" },
+  rejected: { label: "Not selected", cls: "bg-red-100 text-red-700" },
+  withdrawn: { label: "Withdrawn", cls: "bg-muted text-muted-foreground" },
+};
+
 export const EQUIPMENT_META = {
   available: { label: "Available", cls: "bg-emerald-100 text-emerald-700" },
   assigned:  { label: "Assigned",  cls: "bg-blue-100 text-blue-700" },

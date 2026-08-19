@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
 /* Throw on Supabase error so React Query surfaces it */
-const run = async (promise) => {
+export const run = async (promise) => {
   const { data, error } = await promise;
   if (error) throw error;
   return data;

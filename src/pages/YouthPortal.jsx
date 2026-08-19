@@ -18,6 +18,7 @@ import {
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
 import { NotificationsBell, useDropdown } from "@/components/NotificationsBell";
+import { CandidatePortalTabs } from "@/components/CandidatePortalNav";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PasswordSettingsForm } from "@/components/PasswordSettingsForm";
 import {
@@ -50,7 +51,8 @@ function PortalHeader({ youth }) {
   const canUpdateDelivery = !!youth?.youth_delivery_preferences;
 
   return (
-    <div className="mb-6 flex items-center justify-between">
+    <div className="mb-6 space-y-3">
+      <div className="flex items-center justify-between">
       <Link to={session ? "/my-registration" : "/login"} className="flex items-center gap-2.5">
         <img src="/kogi-logo.png" alt="ADOZA Data Centre" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
         <div>
@@ -135,6 +137,9 @@ function PortalHeader({ youth }) {
         )}
       </div>
       </div>
+    </div>
+
+      <CandidatePortalTabs />
 
       <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Password settings">
         <PasswordSettingsForm />

@@ -27,6 +27,9 @@ const TermsOfConditions = lazy(() => import("@/pages/TermsOfConditions"));
 const Login = lazy(() => import("@/pages/Login"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const YouthPortal = lazy(() => import("@/pages/YouthPortal"));
+const TechHub = lazy(() => import("@/pages/TechHub"));
+const TechHubCourse = lazy(() => import("@/pages/TechHubCourse"));
+const OutsourceStaff = lazy(() => import("@/pages/OutsourceStaff"));
 const StaffApplication = lazy(() => import("@/pages/StaffApplication"));
 const OAuthAuthorize = lazy(() => import("@/pages/OAuthAuthorize"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -57,6 +60,9 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/my-registration" element={<YouthPortal />} />
+          <Route path="/tech-hub" element={<TechHub />} />
+          <Route path="/tech-hub/:slug" element={<TechHubCourse />} />
+          <Route path="/outsource-staff" element={<OutsourceStaff />} />
           <Route path="/staff-application" element={<StaffApplication />} />
           <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
 
