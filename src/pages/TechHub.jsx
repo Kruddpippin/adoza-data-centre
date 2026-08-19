@@ -67,7 +67,7 @@ export default function TechHub() {
         </Card>
       )}
 
-      {certifiedCount > 0 && (
+      {certifiedCount > 0 && record?.is_approved_beneficiary && (
         <Card className="animate-fade-up mb-5 border-accent/30 bg-accent/5">
           <CardContent className="flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">

@@ -139,7 +139,7 @@ function PortalHeader({ youth }) {
       </div>
     </div>
 
-      <CandidatePortalTabs />
+      <CandidatePortalTabs youth={youth} />
 
       <Modal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} title="Password settings">
         <PasswordSettingsForm />

@@ -69,14 +69,14 @@ export default function Landing() {
       </header>
 
       <main className="flex flex-1 flex-col justify-center overflow-y-auto">
-        <section className="relative overflow-hidden px-4 py-4 text-center sm:py-6">
+        <section className="relative flex min-h-[280px] flex-col items-center justify-center overflow-hidden px-4 py-6 text-center sm:min-h-[380px] sm:py-8 lg:min-h-[440px]">
           <img
             src="/img/dashboard-welcome.webp"
             alt=""
             aria-hidden="true"
             fetchPriority="high"
             decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-[center_28%]"
+            className="absolute inset-0 h-full w-full object-cover object-[center_32%]"
           />
           <div className="absolute inset-0 bg-primary/90" />
           <div className="relative">

@@ -58,7 +58,8 @@ export default function OutsourceStaff() {
   const [applyingTo, setApplyingTo] = useState(null);
 
   const certifiedCount = progressData?.certificates?.length ?? 0;
-  const eligible = certifiedCount > 0;
+  const isBeneficiary = !!record?.is_approved_beneficiary;
+  const eligible = isBeneficiary && certifiedCount > 0;
 
   const appByCompany = useMemo(() => {
     const map = new Map();
@@ -78,7 +79,7 @@ export default function OutsourceStaff() {
       <div className="animate-fade-up mb-5">
         <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">Outsource Staff</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Work remotely for a partner company abroad. Open to candidates who've earned at least one Tech Hub certificate.
+          Work remotely for a partner company abroad. Open to approved programme beneficiaries who've earned at least one Tech Hub certificate.
         </p>
       </div>
 
@@ -88,14 +89,29 @@ export default function OutsourceStaff() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
               <Lock className="h-6 w-6 text-muted-foreground" aria-hidden />
             </div>
-            <div>
-              <p className="text-sm font-semibold">Complete a Tech Hub course to unlock this</p>
-              <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
-                Earn one certificate from any Tech Hub course and you'll be able to apply to our partner companies here.
-              </p>
-            </div>
-            <Button to="/tech-hub" size="sm">
-              <GraduationCap className="h-4 w-4" /> Go to Tech Hub
+            {!isBeneficiary ? (
+              <div>
+                <p className="text-sm font-semibold">Reserved for approved beneficiaries</p>
+                <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+                  Outsource Staff is only open to candidates approved as programme beneficiaries. Check your registration status for updates.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm font-semibold">Complete a Tech Hub course to unlock this</p>
+                <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+                  Earn one certificate from any Tech Hub course and you'll be able to apply to our partner companies here.
+                </p>
+              </div>
+            )}
+            <Button to={isBeneficiary ? "/tech-hub" : "/my-registration"} size="sm">
+              {isBeneficiary ? (
+                <>
+                  <GraduationCap className="h-4 w-4" /> Go to Tech Hub
+                </>
+              ) : (
+                "View my registration"
+              )}
             </Button>
           </CardContent>
         </Card>

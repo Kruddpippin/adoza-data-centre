@@ -7,7 +7,9 @@ import { cn, initialsOf } from "@/lib/utils";
 const TABS = [
   { to: "/my-registration", label: "My Registration", icon: UserRound },
   { to: "/tech-hub", label: "Tech Hub", icon: GraduationCap },
-  { to: "/outsource-staff", label: "Outsource Staff", icon: Handshake },
+  // Outsource Staff is a placement perk for approved beneficiaries only — filtered
+  // below rather than listed unconditionally.
+  { to: "/outsource-staff", label: "Outsource Staff", icon: Handshake, beneficiaryOnly: true },
 ];
 
 // The tab strip shared by every candidate-facing page (registration status, Tech Hub,
@@ -15,10 +17,11 @@ const TABS = [
 // from the full header so YouthPortal.jsx can drop it into its own richer header without
 // duplicating the header row (which has bank/delivery/account-deletion menu items that
 // only make sense on that page).
-export function CandidatePortalTabs({ className }) {
+export function CandidatePortalTabs({ className, youth }) {
+  const tabs = TABS.filter((t) => !t.beneficiaryOnly || youth?.is_approved_beneficiary);
   return (
     <nav className={cn("flex gap-1 overflow-x-auto rounded-xl border bg-card p-1", className)} aria-label="Candidate portal sections">
-      {TABS.map(({ to, label, icon: Icon }) => (
+      {tabs.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
           to={to}
@@ -74,7 +77,7 @@ export function CandidatePortalNav({ youth }) {
           </button>
         </div>
       </div>
-      <CandidatePortalTabs />
+      <CandidatePortalTabs youth={youth} />
     </div>
   );
 }
