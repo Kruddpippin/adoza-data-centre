@@ -539,29 +539,40 @@ function StatusView({ youth }) {
 
   return (
     <div className="space-y-4">
-      <Card className="p-5 text-center">
-        {youth.photo_url && (
-          <img
-            src={youth.photo_url}
-            alt={`${youth.first_name} ${youth.last_name}`}
-            className="mx-auto h-20 w-20 rounded-full border-2 border-card object-cover shadow-sm"
-          />
-        )}
-        <p className={cn("text-xs font-medium uppercase tracking-wider text-muted-foreground", youth.photo_url ? "mt-3" : "")}>Welcome back</p>
-        <h1 className="font-display mt-1 text-xl font-bold tracking-tight">{youth.first_name} {youth.last_name}</h1>
-        <div className="mt-3 flex items-center justify-center gap-2">
-          {meta && <Badge className={meta.cls}>{meta.label}</Badge>}
-          {youth.is_approved_beneficiary && <Badge className="bg-accent/15 text-accent-foreground">Beneficiary</Badge>}
+      <Card className="relative overflow-hidden p-5 text-center">
+        <img
+          src="/img/dashboard-welcome.webp"
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-[center_28%]"
+        />
+        <div className="absolute inset-0 bg-primary/90" />
+        <div className="relative">
+          {youth.photo_url && (
+            <img
+              src={youth.photo_url}
+              alt={`${youth.first_name} ${youth.last_name}`}
+              className="mx-auto h-20 w-20 rounded-full border-2 border-card object-cover shadow-sm"
+            />
+          )}
+          <p className={cn("text-xs font-medium uppercase tracking-wider text-primary-foreground", youth.photo_url ? "mt-3" : "")}>Welcome back</p>
+          <h1 className="font-display mt-1 text-xl font-bold tracking-tight text-primary-foreground">{youth.first_name} {youth.last_name}</h1>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            {meta && <Badge className={meta.cls}>{meta.label}</Badge>}
+            {youth.is_approved_beneficiary && <Badge className="bg-accent/15 text-accent-foreground">Beneficiary</Badge>}
+          </div>
+          <p className="mt-3 text-xs text-primary-foreground/90">
+            {youth.verification_status === "verified"
+              ? "Your registration has been verified by the programme team. You can now submit your banking details below."
+              : youth.verification_status === "rejected"
+                ? "Your registration could not be verified."
+                : youth.verification_status === "flagged"
+                  ? "Your registration has been flagged for review."
+                  : "Your registration is awaiting review by the programme team."}
+          </p>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          {youth.verification_status === "verified"
-            ? "Your registration has been verified by the programme team. You can now submit your banking details below."
-            : youth.verification_status === "rejected"
-              ? "Your registration could not be verified."
-              : youth.verification_status === "flagged"
-                ? "Your registration has been flagged for review."
-                : "Your registration is awaiting review by the programme team."}
-        </p>
       </Card>
 
       <JourneyProgress youth={youth} />

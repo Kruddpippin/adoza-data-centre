@@ -69,17 +69,28 @@ export default function Landing() {
       </header>
 
       <main className="flex flex-1 flex-col justify-center overflow-y-auto">
-        <section className="bg-primary/[0.04] px-4 py-3 text-center sm:py-4">
-          <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            SYB Door-to-Door Youth Empowerment — Kogi Central
-          </p>
-          <p className="animate-fade-up stagger-2 mt-1.5 text-base text-muted-foreground sm:text-lg">
-            Registration is now open
-          </p>
-          <div className="animate-fade-up stagger-3 mt-3">
-            <Link to="/login?portal=candidate">
-              <Button size="lg">Apply Now</Button>
-            </Link>
+        <section className="relative overflow-hidden px-4 py-4 text-center sm:py-6">
+          <img
+            src="/img/dashboard-welcome.webp"
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover object-[center_28%]"
+          />
+          <div className="absolute inset-0 bg-primary/90" />
+          <div className="relative">
+            <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-primary-foreground">
+              SYB Door-to-Door Youth Empowerment — Kogi Central
+            </p>
+            <p className="animate-fade-up stagger-2 mt-1.5 text-base text-primary-foreground sm:text-lg">
+              Registration is now open
+            </p>
+            <div className="animate-fade-up stagger-3 mt-3">
+              <Link to="/login?portal=candidate">
+                <Button size="lg" variant="accent">Apply Now</Button>
+              </Link>
+            </div>
           </div>
         </section>
 
