@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Pencil, BadgeCheck, XCircle, Flag, Award, MapPin, Phone, Mail,
-  GraduationCap, Briefcase, Wrench, ShieldCheck, Landmark, Truck, CalendarClock,
+  GraduationCap, Briefcase, Wrench, ShieldCheck, Landmark, Truck, CalendarClock, Map as MapIcon,
 } from "lucide-react";
 import { useYouth, useUpdateYouth } from "@/hooks/useData";
 import { useAuth } from "@/context/AuthContext";
@@ -300,13 +300,21 @@ export default function YouthDetail() {
               <InfoRow icon={MapPin} label="Coordinates"
                 value={youth.latitude != null ? `${youth.latitude.toFixed?.(4) ?? youth.latitude}, ${youth.longitude?.toFixed?.(4) ?? youth.longitude}` : null} />
               {youth.latitude != null && (
-                <a
-                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                  href={`https://www.google.com/maps?q=${youth.latitude},${youth.longitude}`}
-                  target="_blank" rel="noreferrer"
-                >
-                  Open in Google Maps
-                </a>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <Link
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    to={`/map?youth=${youth.id}`}
+                  >
+                    <MapIcon className="h-3.5 w-3.5" /> View on Field Map
+                  </Link>
+                  <a
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    href={`https://www.google.com/maps?q=${youth.latitude},${youth.longitude}`}
+                    target="_blank" rel="noreferrer"
+                  >
+                    Open in Google Maps
+                  </a>
+                </div>
               )}
               <InfoRow icon={ShieldCheck} label="Consent" value={youth.consent_given ? `Given ${formatDate(youth.consent_date)}` : "Not given"} />
               <InfoRow

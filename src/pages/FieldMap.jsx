@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { Map as MapIcon } from "lucide-react";
+import { Map as MapIcon, MapPinOff } from "lucide-react";
 import { useDashboardData } from "@/hooks/useData";
 import { Card, Spinner, ErrorState, EmptyState, Badge } from "@/components/ui";
 import { VERIFICATION_META } from "@/lib/utils";
@@ -16,11 +16,34 @@ const STATUS_COLORS = {
 
 export default function FieldMap() {
   const { data, isLoading, isError, refetch } = useDashboardData();
+  const [searchParams] = useSearchParams();
+  // Deep-linked from a candidate's profile ("View on Field Map") — center/zoom on them
+  // and auto-open their popup instead of the default Kogi Central-wide view.
+  const highlightId = searchParams.get("youth");
 
   const points = useMemo(
     () => (data?.youths ?? []).filter((y) => y.latitude != null && y.longitude != null),
     [data]
   );
+
+  const highlighted = useMemo(
+    () => (highlightId ? points.find((y) => y.id === highlightId) : null),
+    [points, highlightId]
+  );
+  // The candidate exists but has no captured coordinates (e.g. GPS was never taken, or a
+  // bad reading was cleared) — nothing to center on, so say so instead of silently
+  // falling back to the default Kogi-wide view with no explanation.
+  const highlightMissing = !!highlightId && !highlighted && !isLoading && !isError;
+  const highlightMissingName = useMemo(() => {
+    if (!highlightMissing) return null;
+    const y = (data?.youths ?? []).find((y) => y.id === highlightId);
+    return y ? `${y.first_name} ${y.last_name}` : "This candidate";
+  }, [highlightMissing, data, highlightId]);
+
+  // MapContainer's center/zoom only apply on first mount (react-leaflet is uncontrolled
+  // after that), which is fine here — points are already loaded by the time this renders.
+  const mapCenter = highlighted ? [highlighted.latitude, highlighted.longitude] : [7.65, 6.75];
+  const mapZoom = highlighted ? 15 : 8;
 
   if (isLoading) return <Spinner />;
   if (isError) return <ErrorState onRetry={refetch} />;
@@ -43,13 +66,20 @@ export default function FieldMap() {
         ))}
       </div>
 
+      {highlightMissing && (
+        <div className="animate-fade-up flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <MapPinOff className="h-4 w-4 shrink-0" aria-hidden />
+          {highlightMissingName} hasn't captured GPS coordinates yet — showing the full map instead.
+        </div>
+      )}
+
       {!points.length ? (
         <EmptyState icon={MapIcon} title="No GPS data yet" message="Candidate registrations with captured coordinates will appear here." />
       ) : (
         <Card className="animate-fade-up overflow-hidden p-0">
           <MapContainer
-            center={[7.65, 6.75]}
-            zoom={8}
+            center={mapCenter}
+            zoom={mapZoom}
             style={{ height: "min(65vh, 560px)", width: "100%" }}
             scrollWheelZoom
           >
@@ -60,13 +90,16 @@ export default function FieldMap() {
             {points.map((y) => (
               <CircleMarker
                 key={y.id}
+                ref={(marker) => {
+                  if (marker && y.id === highlightId) marker.openPopup();
+                }}
                 center={[y.latitude, y.longitude]}
-                radius={8}
+                radius={y.id === highlightId ? 12 : 8}
                 pathOptions={{
                   color: STATUS_COLORS[y.verification_status] ?? "#64748b",
                   fillColor: STATUS_COLORS[y.verification_status] ?? "#64748b",
                   fillOpacity: 0.7,
-                  weight: 2,
+                  weight: y.id === highlightId ? 4 : 2,
                 }}
               >
                 <Popup>

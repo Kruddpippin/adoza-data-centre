@@ -716,10 +716,12 @@ function SelfRegisterForm({ user }) {
     if (i === 1) {
       if (!form.ward) e.ward = "Required";
       if (!form.lga) e.lga = "Required";
-      // Optional field, but a value that's present must be plausible — catches a mistyped
-      // or pasted-in-error coordinate before it ever reaches the admin's Field Map.
-      if ((form.latitude.trim() || form.longitude.trim()) && !isPlausibleNigeriaCoordinate(form.latitude, form.longitude)) {
-        e.longitude = "Doesn't look like a valid Nigeria location — use Capture GPS instead of typing it in";
+      // GPS is captured device-side only now (no more manual entry boxes to mistype or
+      // paste garbage into), and required so every new registration lands on the map.
+      if (!form.latitude.trim() || !form.longitude.trim()) {
+        e.longitude = "Tap Capture GPS to record your location";
+      } else if (!isPlausibleNigeriaCoordinate(form.latitude, form.longitude)) {
+        e.longitude = "Doesn't look like a valid Nigeria location — try Capture GPS again";
       }
     }
     if (i === 2) {
@@ -883,17 +885,15 @@ function SelfRegisterForm({ user }) {
                   {wardOptions.map((w) => <option key={w} value={w}>{w}</option>)}
                 </Select>
               </Field>
-              <Field label="Latitude">
-                <Input value={form.latitude} onChange={set("latitude")} inputMode="decimal" />
-              </Field>
-              <Field label="Longitude" error={errors.longitude}>
-                <Input value={form.longitude} onChange={set("longitude")} inputMode="decimal" />
-              </Field>
-              <div className="flex items-center gap-3 sm:col-span-2">
-                <Button type="button" variant="outline" size="sm" onClick={captureGps}>
-                  <MapPin className="h-4 w-4" /> Capture GPS
-                </Button>
-                {gpsStatus && <p className="text-xs text-muted-foreground">{gpsStatus}</p>}
+              <div className="sm:col-span-2">
+                <Field label="GPS location" required error={errors.longitude}>
+                  <div className="flex items-center gap-3">
+                    <Button type="button" variant="outline" size="sm" onClick={captureGps}>
+                      <MapPin className="h-4 w-4" /> Capture GPS
+                    </Button>
+                    {gpsStatus && <p className="text-xs text-muted-foreground">{gpsStatus}</p>}
+                  </div>
+                </Field>
               </div>
             </CardContent>
           </Card>

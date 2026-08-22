@@ -182,10 +182,18 @@ export function YouthForm({ youthId }: { youthId?: string }) {
     else if (!/^\+?[\d\s-]{10,15}$/.test(form.phone.trim())) e.phone = "Enter a valid phone number";
     if (!form.ward.trim()) e.ward = "Required";
     if (!form.lga) e.lga = "Required";
-    // Optional field, but a value that's present must be plausible — catches a mistyped
-    // or pasted-in-error coordinate before it ever reaches the admin's Field Map.
-    if ((form.latitude.trim() || form.longitude.trim()) && !isPlausibleNigeriaCoordinate(form.latitude, form.longitude)) {
-      e.longitude = "Doesn't look like a valid Nigeria location — use Capture GPS instead of typing it in";
+    // GPS is captured device-side only now (no more manual entry boxes to mistype or
+    // paste garbage into). Required for a brand-new registration; an edit of an existing
+    // record is left alone — the enumerator fixing an unrelated field may not be on-site
+    // to recapture it, and can still use the Capture GPS button if they want to update it.
+    if (!youthId) {
+      if (!form.latitude.trim() || !form.longitude.trim()) {
+        e.longitude = "Tap Capture GPS to record the candidate's location";
+      } else if (!isPlausibleNigeriaCoordinate(form.latitude, form.longitude)) {
+        e.longitude = "Doesn't look like a valid Nigeria location — try Capture GPS again";
+      }
+    } else if ((form.latitude.trim() || form.longitude.trim()) && !isPlausibleNigeriaCoordinate(form.latitude, form.longitude)) {
+      e.longitude = "Doesn't look like a valid Nigeria location — try Capture GPS again";
     }
     if (form.government_id.trim() && !form.government_id_type) {
       e.government_id_type = "Select the ID type first";
@@ -365,25 +373,15 @@ export function YouthForm({ youthId }: { youthId?: string }) {
             options={wardOptions.map((w) => ({ value: w, label: w }))}
           />
         </Field>
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <Field label="Latitude">
-              <Input value={form.latitude} onChangeText={(v) => set("latitude")(v)} keyboardType="decimal-pad" />
-            </Field>
+        <Field label="GPS location" required={!youthId} error={errors.longitude}>
+          <View className="flex-row items-center gap-3">
+            <Button variant="outline" className="h-9 flex-row gap-1.5 px-3" loading={gpsLoading} onPress={captureGps}>
+              <Ionicons name="location-outline" size={16} color="#101a16" />
+              <Text className="text-sm font-semibold text-foreground">Capture GPS</Text>
+            </Button>
+            {gpsStatus ? <Text className="flex-1 text-xs text-muted-foreground">{gpsStatus}</Text> : null}
           </View>
-          <View className="flex-1">
-            <Field label="Longitude" error={errors.longitude}>
-              <Input value={form.longitude} onChangeText={(v) => set("longitude")(v)} keyboardType="decimal-pad" />
-            </Field>
-          </View>
-        </View>
-        <View className="flex-row items-center gap-3">
-          <Button variant="outline" className="h-9 flex-row gap-1.5 px-3" loading={gpsLoading} onPress={captureGps}>
-            <Ionicons name="location-outline" size={16} color="#101a16" />
-            <Text className="text-sm font-semibold text-foreground">Capture GPS</Text>
-          </Button>
-          {gpsStatus ? <Text className="flex-1 text-xs text-muted-foreground">{gpsStatus}</Text> : null}
-        </View>
+        </Field>
       </Card>
 
       <Card className="gap-3">
