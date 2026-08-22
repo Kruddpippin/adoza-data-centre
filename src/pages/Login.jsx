@@ -460,6 +460,94 @@ export default function Login() {
     setError("");
   };
 
+  // Candidates get a split-screen layout (form left, Kogi-youths photo right) so the
+  // portal they land on after "Apply Now" feels distinct from the plain staff login —
+  // staff keeps the original centered-card layout below untouched.
+  if (mode === "youth") {
+    return (
+      <div className="grid min-h-screen bg-background lg:grid-cols-2">
+        <div className="flex flex-col justify-center px-4 py-10 sm:px-8 lg:px-12 xl:px-16">
+          <div className="mx-auto w-full max-w-sm animate-fade-up">
+            <Link to="/" className="mb-8 inline-flex items-center gap-2.5" aria-label="ADOZA Data Centre home">
+              <img
+                src="/kogi-logo.png"
+                alt="ADOZA Data Centre"
+                width={40}
+                height={40}
+                decoding="async"
+                className="h-10 w-10 rounded-full object-cover shadow-sm"
+              />
+              <span className="font-display text-base font-bold tracking-tight">ADOZA Data Centre</span>
+            </Link>
+
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              SYB Door-to-Door Youth Empowerment — Kogi Central
+            </p>
+            <h1 className="font-display mt-1.5 text-2xl font-bold tracking-tight">
+              {youthView === "signin" ? "Sign in" : "Register"}
+            </h1>
+
+            {portalError && (
+              <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center text-xs font-medium text-destructive">
+                {portalError}
+              </p>
+            )}
+
+            <div className="mt-6">
+              {youthView === "signin" ? (
+                <>
+                  <YouthPasswordSignIn />
+                  <button
+                    type="button"
+                    onClick={() => setYouthView("register")}
+                    className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
+                  >
+                    New here? Register
+                  </button>
+                </>
+              ) : (
+                <>
+                  <YouthSignIn />
+                  <button
+                    type="button"
+                    onClick={() => setYouthView("signin")}
+                    className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
+                  >
+                    Already registered? Sign in instead
+                  </button>
+                </>
+              )}
+            </div>
+
+            <p className="mt-8 text-center text-[11px] text-muted-foreground">
+              For candidates registering with the ADOZA empowerment programme.
+            </p>
+          </div>
+        </div>
+
+        <div className="relative hidden lg:block">
+          <img
+            src="/img/dashboard-welcome.webp"
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover object-[center_32%]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-primary/10" />
+          <div className="absolute inset-x-0 bottom-0 p-10 xl:p-12">
+            <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-primary-foreground">
+              SYB Door-to-Door Youth Empowerment — Kogi Central
+            </p>
+            <p className="animate-fade-up stagger-2 mt-2 max-w-md font-display text-xl font-semibold leading-snug text-primary-foreground">
+              Registration is now open for the 2026 ADOZA Empowerment Programme.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-primary/[0.04] p-4">
       <div className="w-full max-w-sm animate-fade-up">
@@ -490,125 +578,101 @@ export default function Login() {
         )}
 
         <Card className="p-6">
-          {mode === "staff" ? (
-            staffView === "signin" ? (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  loading={googleLoading}
-                  disabled={loading}
-                  onClick={continueWithGoogle}
-                >
-                  <GoogleIcon /> Continue with Google
-                </Button>
-
-                <div className="my-4 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or</span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-
-                <form onSubmit={submit} className="space-y-4" noValidate>
-                  <Field label="Email address" required>
-                    <Input
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@adoza.ng"
-                    />
-                  </Field>
-                  <Field label="Password" required error={error}>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="current-password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••••"
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </Field>
-                  <Button type="submit" className="w-full" loading={loading} disabled={googleLoading}>
-                    <LogIn className="h-4 w-4" /> Sign in
-                  </Button>
-                  <ForgotPassword email={email} redirectTo={`${window.location.origin}/reset-password?portal=staff`} />
-                </form>
-
-                <div className="mt-5 border-t pt-4">
-                  <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Demo accounts
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {DEMO_ACCOUNTS.map((d) => (
-                      <Button key={d.email} type="button" variant="outline" size="sm" onClick={() => quickFill(d.email)}>
-                        {d.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setStaffView("apply")}
-                  className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
-                >
-                  New here? Apply to join the team
-                </button>
-              </>
-            ) : (
-              <>
-                <StaffApply />
-                <button
-                  type="button"
-                  onClick={() => setStaffView("signin")}
-                  className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
-                >
-                  Already have staff credentials? Sign in instead
-                </button>
-              </>
-            )
-          ) : youthView === "signin" ? (
+          {staffView === "signin" ? (
             <>
-              <YouthPasswordSignIn />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                loading={googleLoading}
+                disabled={loading}
+                onClick={continueWithGoogle}
+              >
+                <GoogleIcon /> Continue with Google
+              </Button>
+
+              <div className="my-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              <form onSubmit={submit} className="space-y-4" noValidate>
+                <Field label="Email address" required>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@adoza.ng"
+                  />
+                </Field>
+                <Field label="Password" required error={error}>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••••"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </Field>
+                <Button type="submit" className="w-full" loading={loading} disabled={googleLoading}>
+                  <LogIn className="h-4 w-4" /> Sign in
+                </Button>
+                <ForgotPassword email={email} redirectTo={`${window.location.origin}/reset-password?portal=staff`} />
+              </form>
+
+              <div className="mt-5 border-t pt-4">
+                <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Demo accounts
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {DEMO_ACCOUNTS.map((d) => (
+                    <Button key={d.email} type="button" variant="outline" size="sm" onClick={() => quickFill(d.email)}>
+                      {d.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setYouthView("register")}
+                onClick={() => setStaffView("apply")}
                 className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
               >
-                New here? Register
+                New here? Apply to join the team
               </button>
             </>
           ) : (
             <>
-              <YouthSignIn />
+              <StaffApply />
               <button
                 type="button"
-                onClick={() => setYouthView("signin")}
+                onClick={() => setStaffView("signin")}
                 className="mt-4 w-full text-center text-[11px] font-medium text-primary hover:underline"
               >
-                Already registered? Sign in instead
+                Already have staff credentials? Sign in instead
               </button>
             </>
           )}
         </Card>
 
         <p className="mt-4 text-center text-[11px] text-muted-foreground">
-          {mode === "staff" ? "Authorised programme staff only. Activity is audited." : "For candidates registering with the ADOZA empowerment programme."}
+          Authorised programme staff only. Activity is audited.
         </p>
       </div>
     </div>
