@@ -34,7 +34,14 @@ export default function BlogPost() {
       ) : (
         <article className="animate-fade-up space-y-4">
           {post.cover_image_url && (
-            <img src={post.cover_image_url} alt="" className="h-56 w-full rounded-xl object-cover sm:h-72" />
+            // object-contain (not cover) so the full photo always shows — a fixed-height
+            // crop was cutting off the top/bottom of images whose aspect ratio didn't
+            // match the box. max-h caps only very tall images; most render at full width.
+            <img
+              src={post.cover_image_url}
+              alt=""
+              className="max-h-[28rem] w-full rounded-xl bg-muted object-contain"
+            />
           )}
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">{post.title}</h1>
