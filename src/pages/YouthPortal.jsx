@@ -23,7 +23,8 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import { PasswordSettingsForm } from "@/components/PasswordSettingsForm";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
-  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, ID_TYPES, ID_FORMATS, isValidGovernmentId, formatDate, formatNaira, initialsOf, cn,
+  NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, ID_TYPES, ID_FORMATS, isValidGovernmentId,
+  isPlausibleNigeriaCoordinate, formatDate, formatNaira, initialsOf, cn,
 } from "@/lib/utils";
 
 function InfoRow({ icon: Icon, label, value }) {
@@ -668,12 +669,20 @@ function SelfRegisterForm({ user }) {
     setGpsStatus("Locating…");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        // A device/network fix can be off by kilometers, but never continents — a result
+        // outside Nigeria is a bad reading, not somewhere the empowerment programme
+        // registers candidates. Don't silently save it.
+        if (!isPlausibleNigeriaCoordinate(latitude, longitude)) {
+          setGpsStatus("That location doesn't look right — try again with a clearer GPS signal, ideally outdoors.");
+          return;
+        }
         setForm((f) => ({
           ...f,
-          latitude: pos.coords.latitude.toFixed(6),
-          longitude: pos.coords.longitude.toFixed(6),
+          latitude: latitude.toFixed(6),
+          longitude: longitude.toFixed(6),
         }));
-        setGpsStatus(`Captured (±${Math.round(pos.coords.accuracy)}m)`);
+        setGpsStatus(`Captured (±${Math.round(accuracy)}m)`);
       },
       () => setGpsStatus("Could not get location — check permissions."),
       { enableHighAccuracy: true, timeout: 10000 }
@@ -707,6 +716,11 @@ function SelfRegisterForm({ user }) {
     if (i === 1) {
       if (!form.ward) e.ward = "Required";
       if (!form.lga) e.lga = "Required";
+      // Optional field, but a value that's present must be plausible — catches a mistyped
+      // or pasted-in-error coordinate before it ever reaches the admin's Field Map.
+      if ((form.latitude.trim() || form.longitude.trim()) && !isPlausibleNigeriaCoordinate(form.latitude, form.longitude)) {
+        e.longitude = "Doesn't look like a valid Nigeria location — use Capture GPS instead of typing it in";
+      }
     }
     if (i === 2) {
       if (form.government_id.trim() && !form.government_id_type) {
@@ -872,7 +886,7 @@ function SelfRegisterForm({ user }) {
               <Field label="Latitude">
                 <Input value={form.latitude} onChange={set("latitude")} inputMode="decimal" />
               </Field>
-              <Field label="Longitude">
+              <Field label="Longitude" error={errors.longitude}>
                 <Input value={form.longitude} onChange={set("longitude")} inputMode="decimal" />
               </Field>
               <div className="flex items-center gap-3 sm:col-span-2">

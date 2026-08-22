@@ -10,7 +10,10 @@ import { Button, Input, Select, Textarea, Field, Card, CardHeader, CardTitle, Ca
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import { KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, ID_FORMATS, isValidGovernmentId, isAdminRole } from "@/lib/utils";
+import {
+  KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, ID_TYPES, ID_FORMATS,
+  isValidGovernmentId, isAdminRole, isPlausibleNigeriaCoordinate,
+} from "@/lib/utils";
 
 const EMPTY = {
   photo_url: "", first_name: "", last_name: "", gender: "male", date_of_birth: "", phone: "",
@@ -95,12 +98,19 @@ export default function YouthForm() {
     setGpsStatus("Locating…");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        // A device/network fix can be off by kilometers, but never continents — a result
+        // outside Nigeria is a bad reading, not a real registration location.
+        if (!isPlausibleNigeriaCoordinate(latitude, longitude)) {
+          setGpsStatus("That location doesn't look right — try again with a clearer GPS signal, ideally outdoors.");
+          return;
+        }
         setForm((f) => ({
           ...f,
-          latitude: pos.coords.latitude.toFixed(6),
-          longitude: pos.coords.longitude.toFixed(6),
+          latitude: latitude.toFixed(6),
+          longitude: longitude.toFixed(6),
         }));
-        setGpsStatus(`Captured (±${Math.round(pos.coords.accuracy)}m)`);
+        setGpsStatus(`Captured (±${Math.round(accuracy)}m)`);
       },
       () => setGpsStatus("Could not get location — check permissions."),
       { enableHighAccuracy: true, timeout: 10000 }
@@ -135,6 +145,11 @@ export default function YouthForm() {
     if (i === 1) {
       if (!form.ward.trim()) e.ward = "Required";
       if (!form.lga) e.lga = "Required";
+      // Optional field, but a value that's present must be plausible — catches a mistyped
+      // or pasted-in-error coordinate before it ever reaches the admin's Field Map.
+      if ((form.latitude.trim() || form.longitude.trim()) && !isPlausibleNigeriaCoordinate(form.latitude, form.longitude)) {
+        e.longitude = "Doesn't look like a valid Nigeria location — use Capture GPS instead of typing it in";
+      }
     }
     if (i === 2) {
       if (form.government_id.trim() && !form.government_id_type) {
@@ -306,7 +321,7 @@ export default function YouthForm() {
               <Field label="Latitude">
                 <Input value={form.latitude} onChange={set("latitude")} inputMode="decimal" />
               </Field>
-              <Field label="Longitude">
+              <Field label="Longitude" error={errors.longitude}>
                 <Input value={form.longitude} onChange={set("longitude")} inputMode="decimal" />
               </Field>
               <div className="sm:col-span-2 flex items-center gap-3">

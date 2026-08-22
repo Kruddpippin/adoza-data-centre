@@ -99,6 +99,19 @@ export const DELIVERY_METHOD_LABELS: Record<string, string> = {
   pickup_centre: "Pick up at the empowerment centre",
 };
 
+// A generous Nigeria-wide bounding box (not Kogi-only) — real GPS/network fixes can be
+// off by kilometers, but never continents. Catches garbage like manually-typed or
+// pasted-in-error coordinates (e.g. a record once had latitude=25, longitude=26 —
+// suspiciously round numbers landing in the Egypt/Libya desert) without rejecting a
+// slightly-imprecise but genuine reading from somewhere else in the country.
+export const NIGERIA_BOUNDS = { minLat: 4, maxLat: 14, minLng: 2.5, maxLng: 15 };
+
+export const isPlausibleNigeriaCoordinate = (lat: number | string | null | undefined, lng: number | string | null | undefined) => {
+  const la = Number(lat), lo = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return false;
+  return la >= NIGERIA_BOUNDS.minLat && la <= NIGERIA_BOUNDS.maxLat && lo >= NIGERIA_BOUNDS.minLng && lo <= NIGERIA_BOUNDS.maxLng;
+};
+
 // Scoped to Kogi Central's 5 LGAs only — this programme doesn't operate in the other
 // 16 Kogi State LGAs (Kogi East/West), so they're deliberately excluded here.
 export const KOGI_LGAS = ["Adavi", "Ajaokuta", "Ogori/Magongo", "Okehi", "Okene"];
