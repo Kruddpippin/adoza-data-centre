@@ -78,12 +78,12 @@ export default function Landing() {
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover object-[center_32%]"
           />
-          <div className="absolute inset-0 bg-primary/90" />
+          <div className="absolute inset-0 bg-primary/50" />
           <div className="relative">
-            <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-primary-foreground">
+            <p className="animate-fade-up text-xs font-bold uppercase tracking-widest text-primary-foreground [text-shadow:0_1px_4px_rgb(0_0_0_/_45%)]">
               SYB Door-to-Door Youth Empowerment — Kogi Central
             </p>
-            <p className="animate-fade-up stagger-2 mt-1.5 text-base text-primary-foreground sm:text-lg">
+            <p className="animate-fade-up stagger-2 mt-1.5 text-base text-primary-foreground sm:text-lg [text-shadow:0_1px_4px_rgb(0_0_0_/_45%)]">
               Registration is now open
             </p>
             <div className="animate-fade-up stagger-3 mt-3">
