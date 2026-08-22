@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
-import { LogOut, UserRound, GraduationCap, Handshake } from "lucide-react";
+import { LogOut, UserRound, GraduationCap, Handshake, Newspaper } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { cn, initialsOf } from "@/lib/utils";
@@ -7,6 +7,7 @@ import { cn, initialsOf } from "@/lib/utils";
 const TABS = [
   { to: "/my-registration", label: "My Registration", icon: UserRound },
   { to: "/tech-hub", label: "Tech Hub", icon: GraduationCap },
+  { to: "/blog", label: "Blog", icon: Newspaper },
   // Outsource Staff is a placement perk for approved beneficiaries only — filtered
   // below rather than listed unconditionally.
   { to: "/outsource-staff", label: "Outsource Staff", icon: Handshake, beneficiaryOnly: true },

@@ -24,7 +24,7 @@ export const initialsOf = (name = "") =>
   name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "U";
 
 /* ---------- domain constants ---------- */
-export const ROLES = ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"];
+export const ROLES = ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent", "blog_editor"];
 
 export const ROLE_LABELS = {
   super_admin: "Super Admin",
@@ -33,6 +33,7 @@ export const ROLE_LABELS = {
   validator: "Validator",
   committee: "Benefits Committee",
   field_agent: "Field Agent",
+  blog_editor: "Blog Editor",
 };
 
 export const ROLE_COLORS = {
@@ -42,6 +43,7 @@ export const ROLE_COLORS = {
   validator: "bg-amber-100 text-amber-700",
   committee: "bg-teal-100 text-teal-700",
   field_agent: "bg-sky-100 text-sky-700",
+  blog_editor: "bg-pink-100 text-pink-700",
 };
 
 export const ADMIN_ROLES = ["super_admin", "campaign_admin"];
@@ -72,6 +74,14 @@ export const APPLICATION_STATUS_META = {
   rejected: { label: "Not selected", cls: "bg-red-100 text-red-700" },
   withdrawn: { label: "Withdrawn", cls: "bg-muted text-muted-foreground" },
 };
+
+export const BLOG_STATUS_META = {
+  draft: { label: "Draft", cls: "bg-muted text-muted-foreground" },
+  published: { label: "Published", cls: "bg-emerald-100 text-emerald-700" },
+};
+
+// "Other" is a sentinel the registration form swaps for a free-text value before submit.
+export const DESIGNATION_OPTIONS = ["Media Team", "Protocol Team", "Other"];
 
 export const EQUIPMENT_META = {
   available: { label: "Available", cls: "bg-emerald-100 text-emerald-700" },

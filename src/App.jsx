@@ -32,6 +32,13 @@ const TechHubCourse = lazy(() => import("@/pages/TechHubCourse"));
 const OutsourceStaff = lazy(() => import("@/pages/OutsourceStaff"));
 const StaffApplication = lazy(() => import("@/pages/StaffApplication"));
 const OAuthAuthorize = lazy(() => import("@/pages/OAuthAuthorize"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const BlogPost = lazy(() => import("@/pages/BlogPost"));
+const BlogAdmin = lazy(() => import("@/pages/BlogAdmin"));
+const SupportGroupApply = lazy(() => import("@/pages/SupportGroupApply"));
+const SupportGroupDashboard = lazy(() => import("@/pages/SupportGroupDashboard"));
+const SupportGroupExecutiveStructure = lazy(() => import("@/pages/SupportGroupExecutiveStructure"));
+const SupportGroupAdmin = lazy(() => import("@/pages/SupportGroupAdmin"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Youths = lazy(() => import("@/pages/Youths"));
 const YouthForm = lazy(() => import("@/pages/YouthForm"));
@@ -65,6 +72,11 @@ export default function App() {
           <Route path="/outsource-staff" element={<OutsourceStaff />} />
           <Route path="/staff-application" element={<StaffApplication />} />
           <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/gyb2syb" element={<SupportGroupApply />} />
+          <Route path="/gyb2syb/dashboard" element={<SupportGroupDashboard />} />
+          <Route path="/gyb2syb/executive-structure" element={<SupportGroupExecutiveStructure />} />
 
           <Route
             element={
@@ -133,6 +145,22 @@ export default function App() {
               element={
                 <ProtectedRoute roles={ADMIN_ROLES}>
                   <Feedback />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/blog-admin"
+              element={
+                <ProtectedRoute roles={[...ADMIN_ROLES, "blog_editor"]}>
+                  <BlogAdmin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/support-group-admin"
+              element={
+                <ProtectedRoute roles={ADMIN_ROLES}>
+                  <SupportGroupAdmin />
                 </ProtectedRoute>
               }
             />

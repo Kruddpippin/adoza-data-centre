@@ -3,6 +3,7 @@ import { Outlet, NavLink, Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Map, Award, Package, Banknote, ClipboardList,
   UserCog, Shield, Menu, X, LogOut, KeyRound, Smartphone, Megaphone, Inbox,
+  Newspaper, HeartHandshake,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { NotificationsBell, useDropdown } from "@/components/NotificationsBell";
@@ -23,6 +24,8 @@ const NAV_ITEMS = [
   { path: "/equipment", label: "Equipment", icon: Package, roles: ["super_admin", "campaign_admin", "committee"] },
   { path: "/funding", label: "Funding", icon: Banknote, roles: ["super_admin", "campaign_admin", "committee"] },
   { path: "/surveys", label: "Surveys", icon: ClipboardList, roles: ["super_admin", "campaign_admin", "enumerator", "validator", "committee", "field_agent"] },
+  { path: "/blog-admin", label: "Blog", icon: Newspaper, roles: [...ADMIN_ROLES, "blog_editor"] },
+  { path: "/support-group-admin", label: "Support Group", icon: HeartHandshake, roles: ADMIN_ROLES },
   { path: "/users", label: "Team", icon: UserCog, roles: ADMIN_ROLES },
   { path: "/broadcast", label: "Broadcast", icon: Megaphone, roles: ADMIN_ROLES },
   { path: "/feedback", label: "Feedback", icon: Inbox, roles: ADMIN_ROLES },

@@ -550,6 +550,12 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-primary/[0.04] p-4">
+      <Link
+        to="/gyb2syb"
+        className="fixed bottom-4 left-4 z-10 max-w-[calc(100vw-2rem)] text-[11px] font-medium text-muted-foreground hover:text-primary hover:underline"
+      >
+        GYB2SYB Support Integration Group Registration
+      </Link>
       <div className="w-full max-w-sm animate-fade-up">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
           <Link to="/" aria-label="ADOZA Data Centre home">
