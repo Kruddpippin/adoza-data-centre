@@ -32,6 +32,7 @@ const TechHubCourse = lazy(() => import("@/pages/TechHubCourse"));
 const OutsourceStaff = lazy(() => import("@/pages/OutsourceStaff"));
 const StaffApplication = lazy(() => import("@/pages/StaffApplication"));
 const OAuthAuthorize = lazy(() => import("@/pages/OAuthAuthorize"));
+const VerifyEmail = lazy(() => import("@/pages/VerifyEmail"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const BlogAdmin = lazy(() => import("@/pages/BlogAdmin"));
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/outsource-staff" element={<OutsourceStaff />} />
           <Route path="/staff-application" element={<StaffApplication />} />
           <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/gyb2syb" element={<SupportGroupApply />} />

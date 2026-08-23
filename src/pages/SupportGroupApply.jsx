@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useMySupportGroupApplication, useMySupportGroupMembership, useSubmitSupportGroupApplication } from "@/hooks/useSupportGroup";
 import { Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState } from "@/components/ui";
+import { EmailPasswordSignUp } from "@/components/EmailPasswordSignUp";
+import { EmailVerificationGate } from "@/components/EmailVerificationGate";
 import { usePersistedState } from "@/hooks/usePersistedState";
 
 const DESIGNATION_OPTIONS = ["Media Team", "Protocol Team", "Other"];
@@ -103,6 +105,9 @@ function SupportGroupSignIn() {
           <Mail className="h-4 w-4" /> Send me a sign-in link
         </Button>
       </form>
+
+      <EmailPasswordSignUp email={email} onEmailChange={setEmail} signupSource="support_group" />
+
       <p className="text-center text-[11px] text-muted-foreground">
         You'll fill in your details after signing in. An administrator reviews every registration.
       </p>
@@ -237,7 +242,7 @@ function ApplyForm({ user }) {
 }
 
 export default function SupportGroupApply() {
-  const { session, user, loading: authLoading } = useAuth();
+  const { session, user, loading: authLoading, needsEmailVerification } = useAuth();
   const {
     data: membership, isLoading: membershipLoading, isError: membershipError, refetch: refetchMembership,
   } = useMySupportGroupMembership(user?.id);
@@ -288,6 +293,8 @@ export default function SupportGroupApply() {
         <Navigate to="/gyb2syb/dashboard" replace />
       ) : application ? (
         <ApplicationStatus application={application} />
+      ) : needsEmailVerification ? (
+        <EmailVerificationGate />
       ) : (
         <ApplyForm user={user} />
       )}

@@ -21,6 +21,7 @@ import { NotificationsBell, useDropdown } from "@/components/NotificationsBell";
 import { CandidatePortalTabs } from "@/components/CandidatePortalNav";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PasswordSettingsForm } from "@/components/PasswordSettingsForm";
+import { EmailVerificationGate } from "@/components/EmailVerificationGate";
 import {
   KOGI_LGAS, KOGI_WARDS_BY_LGA, EDUCATION_LEVELS, EMPLOYMENT_LABELS, VERIFICATION_META,
   NIGERIAN_BANKS, isValidNuban, DELIVERY_METHOD_LABELS, ID_TYPES, ID_FORMATS, isValidGovernmentId,
@@ -40,7 +41,7 @@ function InfoRow({ icon: Icon, label, value }) {
 }
 
 function PortalHeader({ youth }) {
-  const { session, signOut } = useAuth();
+  const { session, signOut, needsEmailVerification } = useAuth();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
@@ -79,6 +80,11 @@ function PortalHeader({ youth }) {
             initials || "U"
           )}
         </button>
+        {needsEmailVerification && (
+          // Sibling of the button, not a child — the button's own overflow-hidden
+          // (needed to clip the profile photo to a circle) would otherwise clip this too.
+          <span className="pointer-events-none absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-card" aria-hidden />
+        )}
         {menu.open && (
           <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border bg-card p-1.5 shadow-lg" role="menu">
             <button
@@ -1058,7 +1064,7 @@ function StaffEmailBlockedCard() {
 
 export default function YouthPortal() {
   const qc = useQueryClient();
-  const { session, user, profile, loading: authLoading, profileLoading } = useAuth();
+  const { session, user, profile, loading: authLoading, profileLoading, needsEmailVerification } = useAuth();
   const { data: record, isLoading, isError, refetch } = useMyYouthRecord(user?.id);
   const claim = useClaimYouthRecord();
 
@@ -1095,6 +1101,8 @@ export default function YouthPortal() {
           <StatusView youth={record} />
         ) : profile ? (
           <StaffEmailBlockedCard />
+        ) : needsEmailVerification ? (
+          <EmailVerificationGate />
         ) : (
           <SelfRegisterForm user={user} />
         )}

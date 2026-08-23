@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocation, useSearchParams, Navigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams, Navigate, Link } from "react-router-dom";
 import { LogIn, Eye, EyeOff, Mail, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button, Input, Field, Card } from "@/components/ui";
+import { EmailPasswordSignUp } from "@/components/EmailPasswordSignUp";
 import { getStoredPortal, setStoredPortal } from "@/lib/portal";
 
 const DEMO_ACCOUNTS = [
@@ -258,14 +259,18 @@ function YouthSignIn() {
           <Mail className="h-4 w-4" /> Send me a sign-in link
         </Button>
       </form>
+
+      <EmailPasswordSignUp email={email} onEmailChange={setEmail} signupSource="youth_portal" />
+
       <p className="text-center text-[11px] text-muted-foreground">
-        New here? Either option lets you register. Already registered by a field officer? It'll show your status instead.
+        New here? Any option lets you register. Already registered by a field officer? It'll show your status instead.
       </p>
     </div>
   );
 }
 
 function StaffApply() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -350,6 +355,19 @@ function StaffApply() {
           <Mail className="h-4 w-4" /> Send me a sign-in link
         </Button>
       </form>
+
+      {/* Unlike the youth/support-group flows, this MUST navigate away immediately on
+          success rather than let Login()'s own re-render handle it — a same-page signUp()
+          leaves the new session sitting in staff mode with no profiles row, which
+          Login()'s wrongPortal check would otherwise read as "wrong portal" and force
+          sign the account back out the moment it was created. */}
+      <EmailPasswordSignUp
+        email={email}
+        onEmailChange={setEmail}
+        signupSource="staff_application"
+        onSuccess={() => navigate("/staff-application", { replace: true })}
+      />
+
       <p className="text-center text-[11px] text-muted-foreground">
         You'll pick which role you're applying for after signing in. An administrator reviews every application.
       </p>

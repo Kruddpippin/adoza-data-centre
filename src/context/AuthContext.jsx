@@ -17,6 +17,9 @@ export function AuthProvider({ children }) {
   // later too, e.g. right after a fresh sign-in, so callers can wait for `profile` to be
   // trustworthy before deciding "is this a staff account or a candidate" for redirects.
   const [profileLoading, setProfileLoading] = useState(false);
+  // Only ever meaningful for signup_method === "password" accounts (see
+  // needsEmailVerification below) — true while unchecked/not-applicable.
+  const [emailVerified, setEmailVerified] = useState(true);
 
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
@@ -41,6 +44,31 @@ export function AuthProvider({ children }) {
     setProfileLoading(false);
   }, []);
 
+  // Only accounts created through the password signup form ever need this. Checking
+  // user.app_metadata.provider === "email" here would be wrong and was tried first —
+  // empirically, Supabase reports "email" as the provider for magic-link (OTP) accounts
+  // too, not just password ones (confirmed live: existing magic-link candidates/staff
+  // all show provider: "email"), so that check would have wrongly gated every magic-link
+  // user on their very first load. signup_method is a custom user_metadata flag this
+  // app sets itself only in the signUp() call below, so it's unambiguous. Google and
+  // magic-link sessions never need gating anyway — no unconfirmed state exists for
+  // them — and this project's auth.signUp() calls return a live session immediately
+  // (see [[adoza_email_verification_gate]] memory), which also means Supabase's own
+  // email_confirmed_at gets stamped right away and can't be used as the gate — hence
+  // the separate email_verifications table this checks instead.
+  const loadEmailVerification = useCallback(async (user) => {
+    if (!user || user.user_metadata?.signup_method !== "password") {
+      setEmailVerified(true);
+      return;
+    }
+    const { data } = await supabase
+      .from("email_verifications")
+      .select("verified_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setEmailVerified(!!data?.verified_at);
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -49,7 +77,7 @@ export function AuthProvider({ children }) {
       .then(async ({ data }) => {
         if (!active) return;
         setSession(data.session);
-        await loadProfile(data.session?.user?.id);
+        await Promise.all([loadProfile(data.session?.user?.id), loadEmailVerification(data.session?.user)]);
       })
       .finally(() => active && setLoading(false));
 
@@ -62,17 +90,24 @@ export function AuthProvider({ children }) {
       // should ever actually clear the session here.
       if (!next && event !== "SIGNED_OUT") return;
       setSession(next);
-      await loadProfile(next?.user?.id);
+      await Promise.all([loadProfile(next?.user?.id), loadEmailVerification(next?.user)]);
     });
 
     return () => {
       active = false;
       subscription.unsubscribe();
     };
-  }, [loadProfile]);
+  }, [loadProfile, loadEmailVerification]);
 
   const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });
+  const signUp = (email, password, signupSource) =>
+    supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { signup_source: signupSource, signup_method: "password" } },
+    });
   const signOut = () => supabase.auth.signOut();
+  const refreshEmailVerification = () => loadEmailVerification(session?.user);
 
   // Force sign-out after 10 minutes of no mouse/keyboard/touch activity, independent
   // of Supabase's own silent token refresh (which would otherwise keep an unattended
@@ -104,17 +139,23 @@ export function AuthProvider({ children }) {
     };
   }, [session]);
 
+  const user = session?.user ?? null;
+  const needsEmailVerification = !!user && user.user_metadata?.signup_method === "password" && !emailVerified;
+
   return (
     <AuthContext.Provider
       value={{
         session,
-        user: session?.user ?? null,
+        user,
         profile,
         role: profile?.role ?? null,
         loading,
         profileLoading,
+        needsEmailVerification,
         signIn,
+        signUp,
         signOut,
+        refreshEmailVerification,
       }}
     >
       {children}

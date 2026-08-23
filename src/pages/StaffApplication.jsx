@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useMyStaffApplication, useSubmitStaffApplication, useMyYouthRecord } from "@/hooks/useData";
 import { supabase } from "@/lib/supabase";
 import { Button, Input, Select, Field, Card, CardHeader, CardTitle, CardContent, Spinner, ErrorState } from "@/components/ui";
+import { EmailVerificationGate } from "@/components/EmailVerificationGate";
 import { Stepper } from "@/components/Stepper";
 import { WebcamCaptureButton } from "@/components/WebcamCapture";
 import { usePersistedState } from "@/hooks/usePersistedState";
@@ -388,7 +389,7 @@ function ApplyForm({ user }) {
 }
 
 export default function StaffApplication() {
-  const { session, user, loading: authLoading } = useAuth();
+  const { session, user, loading: authLoading, needsEmailVerification } = useAuth();
   const { data: application, isLoading, isError, refetch } = useMyStaffApplication(user?.id);
   const { data: youthRecord, isLoading: loadingYouth } = useMyYouthRecord(user?.id);
 
@@ -408,6 +409,8 @@ export default function StaffApplication() {
         <ApplicationStatus application={application} />
       ) : youthRecord ? (
         <CandidateEmailBlockedCard />
+      ) : needsEmailVerification ? (
+        <EmailVerificationGate />
       ) : (
         <ApplyForm user={user} />
       )}
