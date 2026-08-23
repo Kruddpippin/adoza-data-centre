@@ -2,8 +2,10 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMyYouthRecord } from "@/hooks/useData";
+import { useMySupportGroupMembership } from "@/hooks/useSupportGroup";
 import { usePublishedBlogPost } from "@/hooks/useBlog";
 import { CandidatePortalNav } from "@/components/CandidatePortalNav";
+import { SupportGroupNav } from "@/components/SupportGroupNav";
 import { LessonContent } from "@/components/LessonContent";
 import { Card, Spinner, ErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
@@ -12,6 +14,7 @@ export default function BlogPost() {
   const { slug } = useParams();
   const { session, user, loading: authLoading } = useAuth();
   const { data: record } = useMyYouthRecord(user?.id);
+  const { data: member } = useMySupportGroupMembership(user?.id);
   const { data: post, isLoading, isError, refetch } = usePublishedBlogPost(slug);
 
   if (authLoading) return <Spinner className="min-h-screen" />;
@@ -19,7 +22,9 @@ export default function BlogPost() {
 
   return (
     <div className="mx-auto min-h-screen max-w-3xl p-4 lg:p-8">
-      <CandidatePortalNav youth={record} />
+      {/* The blog is shared across both member portals — show whichever nav actually
+          belongs to this viewer instead of always assuming they're a candidate. */}
+      {member ? <SupportGroupNav member={member} /> : <CandidatePortalNav youth={record} />}
 
       <Link to="/blog" className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" /> All posts

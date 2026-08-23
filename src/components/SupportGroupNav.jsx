@@ -1,12 +1,13 @@
 import { Link, NavLink } from "react-router-dom";
-import { LogOut, LayoutDashboard, Network } from "lucide-react";
+import { LogOut, LayoutDashboard, Network, Newspaper } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { cn, initialsOf } from "@/lib/utils";
 
-// The two-tab set for the GYB2SYB Support Integration Group member portal.
+// The tab set for the GYB2SYB Support Integration Group member portal.
 export const SUPPORT_GROUP_TABS = [
   { to: "/gyb2syb/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/blog", label: "Blog", icon: Newspaper },
   { to: "/gyb2syb/executive-structure", label: "GYB2SYB DOOR2DOOR Executive Structure", icon: Network },
 ];
 

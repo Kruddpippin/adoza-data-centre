@@ -2,14 +2,17 @@ import { Link, Navigate } from "react-router-dom";
 import { Newspaper } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMyYouthRecord } from "@/hooks/useData";
+import { useMySupportGroupMembership } from "@/hooks/useSupportGroup";
 import { usePublishedBlogPosts } from "@/hooks/useBlog";
 import { CandidatePortalNav } from "@/components/CandidatePortalNav";
+import { SupportGroupNav } from "@/components/SupportGroupNav";
 import { Card, Spinner, ErrorState, EmptyState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
 export default function Blog() {
   const { session, user, loading: authLoading } = useAuth();
   const { data: record } = useMyYouthRecord(user?.id);
+  const { data: member } = useMySupportGroupMembership(user?.id);
   const { data: posts, isLoading, isError, refetch } = usePublishedBlogPosts();
 
   if (authLoading) return <Spinner className="min-h-screen" />;
@@ -17,7 +20,9 @@ export default function Blog() {
 
   return (
     <div className="mx-auto min-h-screen max-w-3xl p-4 lg:p-8">
-      <CandidatePortalNav youth={record} />
+      {/* The blog is shared across both member portals — show whichever nav actually
+          belongs to this viewer instead of always assuming they're a candidate. */}
+      {member ? <SupportGroupNav member={member} /> : <CandidatePortalNav youth={record} />}
 
       <div className="animate-fade-up mb-5">
         <h1 className="font-display text-xl font-bold tracking-tight lg:text-2xl">Blog</h1>
