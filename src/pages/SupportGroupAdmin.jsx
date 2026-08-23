@@ -150,6 +150,7 @@ function ExecutiveEntryForm() {
   const [ward, setWard] = useState("");
   const [pollingUnit, setPollingUnit] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [names, setNames] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(null);
@@ -188,18 +189,25 @@ function ExecutiveEntryForm() {
           setError("Enter a name.");
           return;
         }
-        await addOne.mutateAsync({ ...base, name: name.trim() });
+        await addOne.mutateAsync({ ...base, name: name.trim(), phone: phone.trim() || null });
         setName("");
+        setPhone("");
         setSaved(1);
       } else {
-        const nameList = names.split("\n").map((n) => n.trim()).filter(Boolean);
-        if (!nameList.length) {
+        // Phone is per-person (unlike hierarchy/LGA/ward/polling unit, which are shared
+        // across the whole batch), so each line is "Name" or "Name, Phone".
+        const lines = names.split("\n").map((l) => l.trim()).filter(Boolean);
+        if (!lines.length) {
           setError("Enter at least one name — one per line.");
           return;
         }
-        await addBulk.mutateAsync(nameList.map((n) => ({ ...base, name: n })));
+        const rows = lines.map((line) => {
+          const [n, p] = line.split(",");
+          return { ...base, name: n.trim(), phone: p?.trim() || null };
+        });
+        await addBulk.mutateAsync(rows);
         setNames("");
-        setSaved(nameList.length);
+        setSaved(rows.length);
       }
     } catch (err) {
       setError(err.message);
@@ -246,12 +254,26 @@ function ExecutiveEntryForm() {
           </div>
 
           {mode === "single" ? (
-            <Field label="Name" required>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
-            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Name" required>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+              </Field>
+              <Field label="Phone">
+                <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234…" />
+              </Field>
+            </div>
           ) : (
-            <Field label="Names" required hint="One name per line — all of them get this same hierarchy, LGA, ward and polling unit.">
-              <Textarea rows={6} value={names} onChange={(e) => setNames(e.target.value)} placeholder={"Musa Adeiza\nGrace Okafor\nIbrahim Suleiman"} />
+            <Field
+              label="Names"
+              required
+              hint="One person per line — name, or name and phone separated by a comma. All of them get this same hierarchy, LGA, ward and polling unit."
+            >
+              <Textarea
+                rows={6}
+                value={names}
+                onChange={(e) => setNames(e.target.value)}
+                placeholder={"Musa Adeiza, 08012345678\nGrace Okafor, 08023456789\nIbrahim Suleiman"}
+              />
             </Field>
           )}
 
@@ -315,6 +337,7 @@ function ExecutiveList() {
                 <thead>
                   <tr>
                     <Th>Name</Th>
+                    <Th>Phone</Th>
                     <Th>LGA</Th>
                     <Th>Ward</Th>
                     <Th>Polling unit</Th>
@@ -325,6 +348,7 @@ function ExecutiveList() {
                   {people.map((p) => (
                     <tr key={p.id} className="transition-colors hover:bg-muted/40">
                       <Td className="font-medium">{p.name}</Td>
+                      <Td className="text-xs text-muted-foreground">{p.phone || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{p.lga || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{p.ward || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{p.polling_unit || "—"}</Td>

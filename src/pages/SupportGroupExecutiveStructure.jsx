@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { Network, MapPin } from "lucide-react";
+import { Network, MapPin, Phone } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMySupportGroupMembership, useExecutives } from "@/hooks/useSupportGroup";
 import { SupportGroupNav } from "@/components/SupportGroupNav";
@@ -56,7 +56,14 @@ export default function SupportGroupExecutiveStructure() {
                   const location = locationLine(p);
                   return (
                     <div key={p.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border p-3">
-                      <p className="text-sm font-medium">{p.name}</p>
+                      <div>
+                        <p className="text-sm font-medium">{p.name}</p>
+                        {p.phone && (
+                          <a href={`tel:${p.phone}`} className="mt-0.5 flex items-center gap-1 text-xs text-primary hover:underline">
+                            <Phone className="h-3 w-3 shrink-0" aria-hidden /> {p.phone}
+                          </a>
+                        )}
+                      </div>
                       {location && (
                         <p className="flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3 shrink-0" aria-hidden /> {location}
