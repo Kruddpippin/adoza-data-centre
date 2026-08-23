@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Check, X, User as UserIcon, CheckCircle2 } from "lucide-react";
+import { Check, X, User as UserIcon, CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   usePendingSupportGroupApplications, useApproveSupportGroupApplication, useRejectSupportGroupApplication,
-  useSupportGroupMembers, useUpdateSupportGroupMember, useExecutiveStructure, useUpdateExecutiveStructure,
+  useSupportGroupMembers, useUpdateSupportGroupMember,
+  useExecutives, useAddExecutive, useAddExecutivesBulk, useDeleteExecutive,
 } from "@/hooks/useSupportGroup";
 import {
-  Button, Select, Textarea, Spinner, ErrorState, Table, Th, Td, Card, CardHeader, CardTitle, CardContent,
+  Button, Select, Input, Textarea, Field, Spinner, ErrorState, Table, Th, Td, Card, CardHeader, CardTitle, CardContent,
 } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
+import { formatDate, KOGI_LGAS, KOGI_WARDS_BY_LGA, EXECUTIVE_HIERARCHY_LEVELS } from "@/lib/utils";
 
 const MEMBER_STATUS_META = {
   active: { label: "Active" },
@@ -139,62 +140,212 @@ function MemberRoster() {
   );
 }
 
-function ExecutiveStructureEditor() {
+function ExecutiveEntryForm() {
   const { user } = useAuth();
-  const { data: structure, isLoading, isError, refetch } = useExecutiveStructure();
-  const update = useUpdateExecutiveStructure();
-  const [content, setContent] = useState("");
-  const [initialized, setInitialized] = useState(false);
+  const addOne = useAddExecutive();
+  const addBulk = useAddExecutivesBulk();
+  const [mode, setMode] = useState("single"); // single | bulk
+  const [hierarchy, setHierarchy] = useState(EXECUTIVE_HIERARCHY_LEVELS[0]);
+  const [lga, setLga] = useState("");
+  const [ward, setWard] = useState("");
+  const [pollingUnit, setPollingUnit] = useState("");
+  const [name, setName] = useState("");
+  const [names, setNames] = useState("");
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(null);
 
-  useEffect(() => {
-    if (structure && !initialized) {
-      setContent(structure.content ?? "");
-      setInitialized(true);
-    }
-  }, [structure, initialized]);
+  const wardOptions = KOGI_WARDS_BY_LGA[lga] ?? [];
 
-  const handleSave = async () => {
+  const switchMode = (next) => {
+    setMode(next);
     setError("");
-    setSaved(false);
+    setSaved(null);
+  };
+
+  const setLgaAndResetWard = (e) => {
+    setLga(e.target.value);
+    setWard("");
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSaved(null);
+
+    // LGA/ward/polling unit are deliberately optional — a Central Committee entry has
+    // no meaningful geography, unlike a Ward Coordinator or Polling Contact.
+    const base = {
+      hierarchy,
+      lga: lga || null,
+      ward: ward || null,
+      polling_unit: pollingUnit.trim() || null,
+      created_by: user.id,
+    };
+
     try {
-      await update.mutateAsync({ content, updatedBy: user.id });
-      setSaved(true);
+      if (mode === "single") {
+        if (!name.trim()) {
+          setError("Enter a name.");
+          return;
+        }
+        await addOne.mutateAsync({ ...base, name: name.trim() });
+        setName("");
+        setSaved(1);
+      } else {
+        const nameList = names.split("\n").map((n) => n.trim()).filter(Boolean);
+        if (!nameList.length) {
+          setError("Enter at least one name — one per line.");
+          return;
+        }
+        await addBulk.mutateAsync(nameList.map((n) => ({ ...base, name: n })));
+        setNames("");
+        setSaved(nameList.length);
+      }
     } catch (err) {
       setError(err.message);
     }
   };
 
+  const saving = addOne.isPending || addBulk.isPending;
+
   return (
     <Card>
-      <CardHeader><CardTitle>GYB2SYB DOOR2DOOR Executive Structure</CardTitle></CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-xs text-muted-foreground">
-          This is what support group members see on their "GYB2SYB DOOR2DOOR Executive Structure" page.
-        </p>
-        {isLoading ? (
-          <Spinner />
-        ) : isError ? (
-          <ErrorState onRetry={refetch} />
+      <CardHeader><CardTitle>Add to executive structure</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Button type="button" size="sm" variant={mode === "single" ? "default" : "outline"} onClick={() => switchMode("single")}>
+            Single entry
+          </Button>
+          <Button type="button" size="sm" variant={mode === "bulk" ? "default" : "outline"} onClick={() => switchMode("bulk")}>
+            Bulk entry
+          </Button>
+        </div>
+
+        <form onSubmit={submit} className="space-y-4" noValidate>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Hierarchy" required>
+              <Select value={hierarchy} onChange={(e) => setHierarchy(e.target.value)}>
+                {EXECUTIVE_HIERARCHY_LEVELS.map((h) => <option key={h} value={h}>{h}</option>)}
+              </Select>
+            </Field>
+            <Field label="Polling unit" hint="Entered manually — no fixed list.">
+              <Input value={pollingUnit} onChange={(e) => setPollingUnit(e.target.value)} placeholder="e.g. Community Primary School I" />
+            </Field>
+            <Field label="LGA">
+              <Select value={lga} onChange={setLgaAndResetWard}>
+                <option value="">Select LGA…</option>
+                {KOGI_LGAS.map((l) => <option key={l} value={l}>{l}</option>)}
+              </Select>
+            </Field>
+            <Field label="Ward">
+              <Select value={ward} onChange={(e) => setWard(e.target.value)} disabled={!lga}>
+                <option value="">{lga ? "Select ward…" : "Select LGA first…"}</option>
+                {wardOptions.map((w) => <option key={w} value={w}>{w}</option>)}
+              </Select>
+            </Field>
+          </div>
+
+          {mode === "single" ? (
+            <Field label="Name" required>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+            </Field>
+          ) : (
+            <Field label="Names" required hint="One name per line — all of them get this same hierarchy, LGA, ward and polling unit.">
+              <Textarea rows={6} value={names} onChange={(e) => setNames(e.target.value)} placeholder={"Musa Adeiza\nGrace Okafor\nIbrahim Suleiman"} />
+            </Field>
+          )}
+
+          {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+          <div className="flex items-center gap-3">
+            <Button type="submit" loading={saving}>
+              <Plus className="h-4 w-4" /> {mode === "single" ? "Add" : "Add all"}
+            </Button>
+            {saved != null && !saving && (
+              <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Added {saved} {saved === 1 ? "person" : "people"}.
+              </p>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ExecutiveList() {
+  const { data: executives, isLoading, isError, refetch } = useExecutives();
+  const del = useDeleteExecutive();
+  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+
+  if (isLoading) return <Spinner />;
+  if (isError) return <ErrorState onRetry={refetch} />;
+
+  const remove = async (id) => {
+    setError("");
+    setDeletingId(id);
+    try {
+      await del.mutateAsync(id);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const grouped = EXECUTIVE_HIERARCHY_LEVELS.map((level) => ({
+    level,
+    people: (executives ?? []).filter((e) => e.hierarchy === level),
+  })).filter((g) => g.people.length > 0);
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Current structure ({executives?.length ?? 0})</CardTitle></CardHeader>
+      <CardContent className="space-y-5">
+        {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+        {!grouped.length ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">Nothing added yet.</p>
         ) : (
-          <>
-            <Textarea
-              rows={10}
-              value={content}
-              onChange={(e) => { setContent(e.target.value); setSaved(false); }}
-              placeholder="## Leadership&#10;- Coordinator: …&#10;- Media Team Lead: …"
-            />
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-            <div className="flex items-center gap-3">
-              <Button onClick={handleSave} loading={update.isPending}>Save</Button>
-              {saved && !update.isPending && (
-                <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Saved.
-                </p>
-              )}
+          grouped.map(({ level, people }) => (
+            <div key={level}>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {level} ({people.length})
+              </p>
+              <Table>
+                <thead>
+                  <tr>
+                    <Th>Name</Th>
+                    <Th>LGA</Th>
+                    <Th>Ward</Th>
+                    <Th>Polling unit</Th>
+                    <Th> </Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {people.map((p) => (
+                    <tr key={p.id} className="transition-colors hover:bg-muted/40">
+                      <Td className="font-medium">{p.name}</Td>
+                      <Td className="text-xs text-muted-foreground">{p.lga || "—"}</Td>
+                      <Td className="text-xs text-muted-foreground">{p.ward || "—"}</Td>
+                      <Td className="text-xs text-muted-foreground">{p.polling_unit || "—"}</Td>
+                      <Td>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Remove ${p.name}`}
+                          loading={deletingId === p.id}
+                          onClick={() => remove(p.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
             </div>
-          </>
+          ))
         )}
       </CardContent>
     </Card>
@@ -222,7 +373,9 @@ export default function SupportGroupAdmin() {
 
       <MemberRoster />
 
-      <ExecutiveStructureEditor />
+      <ExecutiveEntryForm />
+
+      <ExecutiveList />
     </div>
   );
 }

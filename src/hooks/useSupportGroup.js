@@ -92,25 +92,37 @@ export function useUpdateSupportGroupMember() {
 }
 
 /* ============ GYB2SYB DOOR2DOOR executive structure ============ */
-export function useExecutiveStructure() {
+// Ordered by hierarchy then name client-side (not in the query) so the fixed
+// EXECUTIVE_HIERARCHY_LEVELS order — not alphabetical — controls display grouping.
+export function useExecutives() {
   return useQuery({
-    queryKey: ["gyb2syb-executive-structure"],
-    queryFn: () => run(supabase.from("gyb2syb_executive_structure").select("*").eq("id", 1).single()),
+    queryKey: ["gyb2syb-executives"],
+    queryFn: () => run(supabase.from("gyb2syb_executives").select("*").order("name")),
   });
 }
 
-export function useUpdateExecutiveStructure() {
+export function useAddExecutive() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ content, updatedBy }) =>
-      run(
-        supabase
-          .from("gyb2syb_executive_structure")
-          .update({ content, updated_at: new Date().toISOString(), updated_by: updatedBy })
-          .eq("id", 1)
-          .select()
-          .single()
-      ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["gyb2syb-executive-structure"] }),
+    mutationFn: (row) => run(supabase.from("gyb2syb_executives").insert(row).select().single()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gyb2syb-executives"] }),
+  });
+}
+
+// One row per name, all sharing the same hierarchy/lga/ward/polling_unit — the bulk-entry
+// case where a whole batch of people share the same designation and location.
+export function useAddExecutivesBulk() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (rows) => run(supabase.from("gyb2syb_executives").insert(rows).select()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gyb2syb-executives"] }),
+  });
+}
+
+export function useDeleteExecutive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => run(supabase.from("gyb2syb_executives").delete().eq("id", id)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gyb2syb-executives"] }),
   });
 }

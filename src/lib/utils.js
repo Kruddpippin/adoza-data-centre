@@ -83,6 +83,16 @@ export const BLOG_STATUS_META = {
 // "Other" is a sentinel the registration form swaps for a free-text value before submit.
 export const DESIGNATION_OPTIONS = ["Media Team", "Protocol Team", "Other"];
 
+// GYB2SYB DOOR2DOOR executive structure hierarchy, top to bottom — this order drives
+// both the admin entry form's dropdown and how the structure is grouped for display.
+export const EXECUTIVE_HIERARCHY_LEVELS = [
+  "Central Committee",
+  "LGA Coordinator",
+  "Ward Coordinator",
+  "Polling Contact",
+  "Mobilisation Unit Officer",
+];
+
 export const EQUIPMENT_META = {
   available: { label: "Available", cls: "bg-emerald-100 text-emerald-700" },
   assigned:  { label: "Assigned",  cls: "bg-blue-100 text-blue-700" },
